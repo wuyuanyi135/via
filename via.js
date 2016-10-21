@@ -2652,7 +2652,7 @@ function show_current_attributes() {
         }
         theader += '</tr>';
         region_info.push(theader);
-        
+
         for (var attribute of _via_region_attributes) {
 	    region_info.push('<tr>');
 	    region_info.push('<td class="header_cell" title="' + attribute + '">' + attribute + '</td>');
@@ -2664,10 +2664,17 @@ function show_current_attributes() {
 		    if (regions[i].region_attributes.has(attribute)) {
 			var attr_val = regions[i].region_attributes.get(attribute);
 			var param = _via_region_attribute_param.get(attribute);
+
 			switch(param.get('type')) {
 			case 'select_image':
-			    var pic_index = param.get('image_value_list').indexOf(attr_val);
-			    region_info.push('<td class="clickable_tbl_entry" title="' + attr_val + '" onclick="' + click_handler + '">' + attr_val + '</td>');
+			    if (_via_region_attributes.size == 1) {
+				
+			    } else {
+				var pic_index = param.get('image_value_list').indexOf(attr_val);
+				var pic_url = param.get('image_url_list')[pic_index];
+				var pic_attr = '<div><img src="' + pic_url + '"><p>' + attr_val + '</p></div>';
+				region_info.push('<td class="clickable_tbl_entry" title="' + attr_val + '" onclick="' + click_handler + '">' + pic_attr + '</td>');
+			    }
 			    break;
 			default:
 			    
