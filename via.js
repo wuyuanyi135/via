@@ -45,6 +45,7 @@ var VIA_THEME_SEL_REGION_FILL_COLOR = "#808080";
 var VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR = "#000000";
 var VIA_THEME_SEL_REGION_OPACITY = 0.5;
 var VIA_THEME_MESSAGE_TIMEOUT_MS = 5000;
+var VIA_THEME_ATTRIBUTE_IMG_WIDTH = 100;
 var VIA_IMPORT_CSV_COMMENT_CHAR = '#';
 var VIA_IMPORT_CSV_KEYVAL_SEP_CHAR = ';';
 var VIA_EXPORT_CSV_ARRAY_SEP_CHAR = ':';
@@ -97,6 +98,7 @@ var _via_message_clear_timer;
 var _via_region_attributes = new Set();
 var _via_current_update_attribute_name = "";
 var _via_current_update_region_id = -1;
+var _via_region_attribute_param = new Map();
 
 // persistence to local storage
 var _via_is_local_storage_available = false;
@@ -179,13 +181,52 @@ function _via_get_image_id(filename, size) {
 
 function main() {
     console.log("VGG Image Annotator (via)");
-    show_home_panel();   
     show_message("VGG Image Annotator (via) version " + VIA_VERSION + ". Ready !");
     show_current_attributes();
-
+    
     _via_is_local_storage_available = check_local_storage();
 
-    //start_demo_session(); // defined in via_demo.js
+    //show_home_panel();   
+    start_demo_session(); // defined in via_demo.js
+    
+    var data = `{
+  "pic": {
+    "type": "select_image",
+    "image_url_list": [
+      "https://images-na.ssl-images-amazon.com/images/M/MV5BMTQzMDEwNjUzNV5BMl5BanBnXkFtZTgwOTg2MzU0MzE@._V1_UY317_CR1,0,214,317_AL_.jpg",
+      "https://images-na.ssl-images-amazon.com/images/M/MV5BMjE0MjAwOTMzMF5BMl5BanBnXkFtZTcwMDg1MjEyNw@@._V1_UY317_CR1,0,214,317_AL_.jpg",
+      "https://images-na.ssl-images-amazon.com/images/M/MV5BMTY0MzUwNzk0NF5BMl5BanBnXkFtZTYwNzM5NjEz._V1_UY317_CR14,0,214,317_AL_.jpg",
+      "https://images-na.ssl-images-amazon.com/images/M/MV5BMTgwNzE2OTQ3M15BMl5BanBnXkFtZTcwNTc0NTcxOA@@._V1_UX214_CR0,0,214,317_AL_.jpg",
+      "https://images-na.ssl-images-amazon.com/images/M/MV5BMTczOTA1NTQ4OF5BMl5BanBnXkFtZTcwMzU1NjkxOA@@._V1_UY317_CR22,0,214,317_AL_.jpg",
+      "https://images-na.ssl-images-amazon.com/images/M/MV5BMjAwNjA5Nzg0Ml5BMl5BanBnXkFtZTgwMjQzNjUyODE@._V1_UY317_CR18,0,214,317_AL_.jpg",
+      "https://images-na.ssl-images-amazon.com/images/M/MV5BMTg2OTc0NzkzNF5BMl5BanBnXkFtZTgwMzE1NTYzNjE@._V1_UY317_CR51,0,214,317_AL_.jpg",
+      "https://images-na.ssl-images-amazon.com/images/M/MV5BMjM1NzQ2MzE5NF5BMl5BanBnXkFtZTgwNzE3OTM2NjE@._V1_UY317_CR29,0,214,317_AL_.jpg",
+      "https://images-na.ssl-images-amazon.com/images/M/MV5BMTQ0Nzg4ODAyMF5BMl5BanBnXkFtZTgwNjkyNTQyMjE@._V1_UY317_CR20,0,214,317_AL_.jpg",
+      "https://images-na.ssl-images-amazon.com/images/M/MV5BMjEwODQ5NTkwNF5BMl5BanBnXkFtZTgwMTM5NjE1NTE@._V1_UY317_CR104,0,214,317_AL_.jpg",
+      "https://images-na.ssl-images-amazon.com/images/M/MV5BMTU4NDkxMDQ4Nl5BMl5BanBnXkFtZTcwNTE2NDQwOA@@._V1_UY317_CR20,0,214,317_AL_.jpg",
+      "https://images-na.ssl-images-amazon.com/images/M/MV5BMzMzOTUyOTc4NV5BMl5BanBnXkFtZTcwNTA5NzM5Mg@@._V1_UY317_CR26,0,214,317_AL_.jpg",
+      "https://images-na.ssl-images-amazon.com/images/M/MV5BMjI4MjI0NzY2OF5BMl5BanBnXkFtZTcwNTIxMDAyOA@@._V1_UY317_CR1,0,214,317_AL_.jpg",
+      "https://images-na.ssl-images-amazon.com/images/M/MV5BMTQyMjI0NjgwNF5BMl5BanBnXkFtZTcwODI0NTQwOA@@._V1_UX214_CR0,0,214,317_AL_.jpg"
+    ],
+    "image_value_list": [
+      "Sherlock Holmes",
+      "Dr. John Watson",
+      "DI Lestrade",
+      "Mrs. Hudson",
+      "Molly Hooper",
+      "Sgt Sally Donovan",
+      "Ella",
+      "Helen",
+      "Margaret Patterson",
+      "Mike Stamford",
+      "Anderson",
+      "Anthea",
+      "Angelo",
+      "Jeff"
+    ]
+  }
+}`;
+    import_region_attributes_from_json(data);
 }
 
 //
@@ -228,7 +269,7 @@ function download_all_region_data(type) {
 
 function upload_region_data_file() {
     if (invisible_file_input) {
-        invisible_file_input.accept='text/csv, text/json';
+        invisible_file_input.accept='text/csv, text/json, application/json';
         invisible_file_input.onchange = import_region_data_from_file;
         invisible_file_input.click();
     }
@@ -249,7 +290,7 @@ function save_attributes() {
 function import_attributes() {
     if (_via_current_image_loaded) {
 	if (invisible_file_input) {
-            invisible_file_input.accept='text/csv';
+            invisible_file_input.accept='text/csv, text/json, application/json';
             invisible_file_input.onchange = import_region_attributes_from_file;
             invisible_file_input.click();
 	}
@@ -317,30 +358,75 @@ function upload_local_images(event) {
 function import_region_attributes_from_file(event) {
     var selected_files = event.target.files;
     for (var file of selected_files) {
+	console.log(file.type);
         switch(file.type) {
         case 'text/csv':
             load_text_file(file, import_region_attributes_from_csv);
             break;
+        case 'text/json':
+	case 'application/json':
+            load_text_file(file, import_region_attributes_from_json);
+            break;	    
         }
     }
 }
 
-function import_region_attributes_from_csv(data) {
-    data = data.replace(/\n/g, ''); // discard newline \n
-    var csvdata = data.split(',');
+function import_region_attributes_from_json(data) {
+    var d = JSON.parse(data);
+    var dattr_name = Object.getOwnPropertyNames(d);
     var attributes_import_count = 0;
-    for (var i=0; i<csvdata.length; ++i) {
-        if ( !_via_region_attributes.has(csvdata[i]) ) {
-            _via_region_attributes.add(csvdata[i]);
-            attributes_import_count += 1;
-        }
-    }
+    for (var attribute_name in d) {
+	if ( !_via_region_attributes.has(attribute_name) ) {
+	    _via_region_attributes.add(attribute_name);
 
-    _via_reload_img_table = true;
+	    if (d[attribute_name].hasOwnProperty('type')) {
+		_via_region_attribute_param.set(attribute_name, new Map());
+		for (var param in d[attribute_name]) {
+		    _via_region_attribute_param.get(attribute_name).set(param,
+									d[attribute_name][param]);
+		}
+	    } else {
+		show_message('Ignoring missing "type" field in imported attribute name "' + attribute_name + '"');
+	    }
+	    attributes_import_count += 1;
+	}
+    }
+    console.log(_via_region_attributes);
+    console.log(_via_region_attribute_param);
+
     show_current_attributes();
     show_region_attributes_info();
-    show_message('Imported ' + attributes_import_count + ' attributes from CSV file');
+    show_message('Imported ' + attributes_import_count + ' attributes from JSON file');
     save_current_data_to_browser_cache();
+
+}
+
+function import_region_attributes_from_csv(data) {
+    if (data.includes(',')) {
+	// contains just attribute names seperated by comma
+	data = data.replace(/\n/g, ''); // discard newline \n
+	var csvdata = data.split(',');
+	var attributes_import_count = 0;
+	for (var i=0; i<csvdata.length; ++i) {
+	    var attribute_name = csvdata[i].trim();
+	    
+	    if ( !_via_region_attributes.has(attribute_name) ) {
+		_via_region_attributes.add(attribute_name);
+		attributes_import_count += 1;
+
+		_via_region_attribute_type.set(attribute_name, new Map());
+		_via_region_attribute_type.get(attribute_name).set('type', 'textarea');
+	    }
+	}
+	_via_reload_img_table = true;
+	show_current_attributes();
+	show_region_attributes_info();
+	show_message('Imported ' + attributes_import_count + ' attributes from CSV file');
+	save_current_data_to_browser_cache();
+    } else {
+	show_message('CSV data has invalid format!', VIA_THEME_MESSAGE_TIMEOUT_MS);
+	return;
+    }
 }
 
 function import_region_data_from_file(event) {
@@ -442,6 +528,8 @@ function import_region_data_from_csv(data) {
 
                         if (!_via_region_attributes.has(key)) {
                             _via_region_attributes.add(key);
+			    _via_region_attribute_param.set(key, new Map());
+			    _via_region_attribute_param.get(key).set('type', 'textarea');
                         }
                     }
                 }               
@@ -2550,7 +2638,7 @@ function show_filename_info() {
 // attributes
 //
 function show_current_attributes() {
-    if ( _via_region_attributes.size > 0 ) {
+    if ( _via_current_image_loaded ) {
         var region_info = [];
 
         var theader = '<tr><th></th>';
@@ -2566,27 +2654,35 @@ function show_current_attributes() {
         region_info.push(theader);
         
         for (var attribute of _via_region_attributes) {
-            region_info.push('<tr>');
-            region_info.push('<td class="header_cell" title="' + attribute + '">' + attribute + '</td>');
+	    region_info.push('<tr>');
+	    region_info.push('<td class="header_cell" title="' + attribute + '">' + attribute + '</td>');
 
-            var regions = _via_images[_via_image_id].regions;
-            for (var i=0; i<regions.length; ++i) {
+	    var regions = _via_images[_via_image_id].regions;
+	    for (var i=0; i<regions.length; ++i) {
                 if (_via_canvas_regions[i].is_user_selected) {
-                    var click_handler = 'update_attribute_value(\'' + i +'\', \'' + attribute + '\')';
-                    if (regions[i].region_attributes.has(attribute)) {
-                        var attr_val = regions[i].region_attributes.get(attribute);
-                        region_info.push('<td class="clickable_tbl_entry" title="' + attr_val + '" onclick="' + click_handler + '">' + attr_val + '</td>');
-                    } else {
+		    var click_handler = 'update_attribute_value(\'' + i +'\', \'' + attribute + '\')';
+		    if (regions[i].region_attributes.has(attribute)) {
+			var attr_val = regions[i].region_attributes.get(attribute);
+			var param = _via_region_attribute_param.get(attribute);
+			switch(param.get('type')) {
+			case 'select_image':
+			    var pic_index = param.get('image_value_list').indexOf(attr_val);
+			    region_info.push('<td class="clickable_tbl_entry" title="' + attr_val + '" onclick="' + click_handler + '">' + attr_val + '</td>');
+			    break;
+			default:
+			    
+                            region_info.push('<td class="clickable_tbl_entry" title="' + attr_val + '" onclick="' + click_handler + '">' + attr_val + '</td>');
+			}
+		    } else {
                         region_info.push('<td title="' + attr_val + '" onclick="' + click_handler + '">' + '<span class="action_text_link">[click to set value]</span>' + '</td>');
-                    }
+		    }
                 }
-            }
+	    }
 
-            region_info.push('</tr>');
+	    region_info.push('</tr>');
         }
         region_info_table.innerHTML = region_info.join('');
     } else {
-        //region_info_table.innerHTML = '<tr class="action_text_link" ><td onclick="import_attributes()" title="Import existing attributes from a file">[click to import attributes]</td></tr>';
         region_info_table.innerHTML = '<tr><td><span class="action_text_link" onclick="add_attribute_name()">[Add]</span> attributes or <span class="action_text_link" onclick="import_attributes()">[Import]</span> from a file</td></tr>';
     }
 }
@@ -2656,29 +2752,60 @@ function update_attribute_value(region_id, attribute) {
         cur_attr_val = '';
     }
     
-    var region_info = [];    
-    region_info.push('<tr><td colspan="2">' + attribute + '</td></tr>');
-    region_info.push('<tr><td colspan="2"><textarea id="textarea_attribute_value" rows="8" cols="40">' + cur_attr_val + '</textarea></td></tr>');
-    region_info.push('<tr><td><button type="button" onclick="save_attribute_value()">Save</button> (or Enter)</td>');
-    region_info.push('<td><button type="button" onclick="cancel_attribute_update()">Cancel</button> (or Esc)</td></tr>');
+    var region_info = [];
+    var param = _via_region_attribute_param.get(attribute);
 
-    region_info_table.innerHTML = region_info.join('');
-    
-    document.getElementById("textarea_attribute_value").focus();
-    document.getElementById("textarea_attribute_value").onkeypress = function(e) {
-        if ( e.key == VIA_IMPORT_CSV_COMMENT_CHAR ||
-             e.key == VIA_IMPORT_CSV_KEYVAL_SEP_CHAR ||
-             e.key == VIA_EXPORT_CSV_ARRAY_SEP_CHAR ||
-             e.key == VIA_CSV_SEP_CHAR ||
-             e.key == '~') {
-            show_message('Some special characters (, : ; #) are not allowed', VIA_THEME_MESSAGE_TIMEOUT_MS);
-            e.preventDefault();
-        }
-    };
+    switch (param.get('type')) {
+    case 'select_image':
+	region_info.push('<tr><td>');
+	for (var i=0; i<param.get('image_url_list').length; ++i) {
+	    var imgblock = '<div style="display: inline-block; padding:1em;">';
+	    imgblock += '<input type="image" src="' + param.get('image_url_list')[i] + '"' +
+		' width="' + VIA_THEME_ATTRIBUTE_IMG_WIDTH + '"' + 
+		' alt="' + param.get('image_value_list')[i] + '"' +
+		' onclick="save_attribute_value(\'' + param.get('image_value_list')[i] + '\')">';
+	    imgblock += '<p>' + param.get('image_value_list')[i] + '</p>';
+	    imgblock += '</div>';
+	    console.log(imgblock);
+	    region_info.push(imgblock);
+	}
+	region_info.push('</td></tr>');
+	region_info_table.innerHTML = region_info.join('');
+	break;
+	
+    default:
+	region_info.push('<tr><td colspan="2">' + attribute + '</td></tr>');
+	region_info.push('<tr><td colspan="2"><textarea id="textarea_attribute_value" rows="8" cols="40">' + cur_attr_val + '</textarea></td></tr>');
+	region_info.push('<tr><td><button type="button" onclick="save_attribute_value()">Save</button> (or Enter)</td>');
+	region_info.push('<td><button type="button" onclick="cancel_attribute_update()">Cancel</button> (or Esc)</td></tr>');
+
+	region_info_table.innerHTML = region_info.join('');
+	
+	document.getElementById("textarea_attribute_value").focus();
+	document.getElementById("textarea_attribute_value").onkeypress = function(e) {
+            if ( e.key == VIA_IMPORT_CSV_COMMENT_CHAR ||
+		 e.key == VIA_IMPORT_CSV_KEYVAL_SEP_CHAR ||
+		 e.key == VIA_EXPORT_CSV_ARRAY_SEP_CHAR ||
+		 e.key == VIA_CSV_SEP_CHAR ||
+		 e.key == '~') {
+		show_message('Some special characters (, : ; #) are not allowed', VIA_THEME_MESSAGE_TIMEOUT_MS);
+		e.preventDefault();
+            }
+	};
+    }
 }
 
-function save_attribute_value() {
-    var new_attribute_value = document.getElementById("textarea_attribute_value").value;
+function save_attribute_value(attribute_value) {
+    var param = _via_region_attribute_param.get(_via_current_update_attribute_name);
+    var new_attribute_value = '';
+    switch(param.get('type')) {
+    case 'select_image':
+	new_attribute_value = attribute_value;
+	break;
+    default:
+	new_attribute_value = document.getElementById("textarea_attribute_value").value;
+    }
+
     var img_region_attr = _via_images[_via_image_id].regions[_via_current_update_region_id].region_attributes;
     
     img_region_attr.set(_via_current_update_attribute_name, new_attribute_value);
