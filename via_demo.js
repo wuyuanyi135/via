@@ -47,7 +47,8 @@ function start_demo_session() {
     }
 
     _via_image_index = 0;
-    import_region_data_from_csv(demo_region_data);
+    show_image(0);
+    //import_region_data_from_csv(demo_region_data);
 }
 
 
