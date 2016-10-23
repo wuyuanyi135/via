@@ -2611,29 +2611,35 @@ function show_filename_info() {
 function show_current_attributes() {
     var region_info = [];
 
-    for (var attribute of _via_region_attributes) {
+    if (_via_region_attributes.size > 0) {
+	for (var attribute of _via_region_attributes) {
 
-	if (_via_is_region_selected) {
-	    var region = _via_images[_via_image_id].regions[_via_user_sel_region_id];
-	    var param = _via_region_attributes_param.get(attribute);
+	    if (_via_is_region_selected) {
+		var region = _via_images[_via_image_id].regions[_via_user_sel_region_id];
+		var param = _via_region_attributes_param.get(attribute);
 
-	    for (var i=0; i<param.get('image_base64_data').length; ++i) {
-		var img_data = param.get('image_base64_data')[i];
-		var real_name = param.get('real_name')[i];
-		var other_name = param.get('other_name')[i];
+		for (var i=0; i<param.get('image_base64_data').length; ++i) {
+		    var img_data = param.get('image_base64_data')[i];
+		    var real_name = param.get('real_name')[i];
+		    var other_name = param.get('other_name')[i];
 
-		var action = 'set_region_attribute_value(' + _via_user_sel_region_id + ', \'' + attribute + '\', \'' + other_name + '\')';
-		if (region.region_attributes.get(attribute) == other_name) {
-		    region_info.push('<tr class="clickable_tbl_entry highlighted_tbl_entry" onclick="' + action + '">');
-		} else {
-		    region_info.push('<tr class="clickable_tbl_entry" onclick="' + action + '">');
+		    var action = 'set_region_attribute_value(' + _via_user_sel_region_id + ', \'' + attribute + '\', \'' + other_name + '\')';
+		    if (region.region_attributes.get(attribute) == other_name) {
+			region_info.push('<tr class="clickable_tbl_entry highlighted_tbl_entry" onclick="' + action + '">');
+		    } else {
+			region_info.push('<tr class="clickable_tbl_entry" onclick="' + action + '">');
+		    }
+		    
+		    region_info.push('<td><img width="' + VIA_THEME_ATTRIBUTE_IMG_WIDTH + '" src="' + img_data + '" alt="' + real_name + '"></td>');
+		    region_info.push('<td>' + real_name + '<br/>(' + other_name + ')</td>');
+		    region_info.push('</tr>');
 		}
-		
-		region_info.push('<td><img width="' + VIA_THEME_ATTRIBUTE_IMG_WIDTH + '" src="' + img_data + '" alt="' + real_name + '"></td>');
-		region_info.push('<td>' + real_name + '<br/>(' + other_name + ')</td>');
-		region_info.push('</tr>');
+	    } else {
+		region_info.push('<tr><td>' + attribute + '</td></tr>');
 	    }
 	}
+    } else {
+	region_info.push('<tr><td><span class="action_text_link" onclick="import_attributes()" title="[click to import attributes]">[click to import attributes]</span></td></tr>');
     }
     region_info_table.innerHTML = region_info.join('');
 }

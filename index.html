@@ -359,9 +359,7 @@
           </li>
           <li class="dropdown"><a title="Attributes" class="drop_menu_item">Attributes &#9662</a>
             <div class="dropdown-content">
-              <a onclick="save_attributes()" title="Save image region attributes to a local file">Save attributes</a>
               <a onclick="import_attributes()" title="Import existing attributes from a file">Import attributes</a>
-              <a onclick="delete_all_attributes()" title="Delete all attributes">Delete attributes</a>
             </div>
           </li>
           <li class="dropdown"><a onclick="show_about_panel()" title="Help">Help &#9662</a>
@@ -403,10 +401,9 @@
             </table>
           </div>
           
-          <div>
-            <div style="display: inline-block;" class="title">Region Name</div>
-          </div>
-          <table id="region_info_table"></table>
+          <div style="display: inline-block;" class="title">Region Name</div>
+          <table id="region_info_table">
+	  </table>
           
           <div class="title">Keyboard Shortcuts</div>
           <div class="info">
