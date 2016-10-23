@@ -214,7 +214,6 @@ function show_home_panel() {
 function load_images() {
     // source: https://developer.mozilla.org/en-US/docs/Using_files_from_web_applications
     if (invisible_file_input) {
-	console.log(invisible_file_input);
         invisible_file_input.accept='image/*';
         invisible_file_input.onchange = upload_local_images;
         invisible_file_input.click();
@@ -321,8 +320,8 @@ function upload_local_images(event) {
 
 function import_region_attributes_from_file(event) {
     var selected_files = event.target.files;
-    for (var file of selected_files) {
-	console.log(file.type);
+    for (var i=0; i<selected_files.length; ++i) {
+	var file = selected_files[i];
         switch(file.type) {
         case 'text/csv':
             load_text_file(file, import_region_attributes_from_csv);
@@ -360,7 +359,8 @@ function import_region_attributes_from_json(data) {
 
 function import_region_data_from_file(event) {
     var selected_files = event.target.files;
-    for (var file of selected_files) {
+    for (var i=0; i<selected_files.length; ++i) {
+	var file = selected_files[i];
         switch(file.type) {
         case 'text/csv':
             load_text_file(file, import_region_data_from_csv);
@@ -476,7 +476,8 @@ function import_region_data_from_csv(data) {
 
 function import_region_data_from_json(data) {
     var _via_images_as_json = JSON.parse(data);
-
+    console.log(_via_images_as_json);
+    
     var image_count = 0;
     var region_import_count = 0;
     var skipped_file_attr_count = 0;
@@ -506,6 +507,7 @@ function import_region_data_from_json(data) {
 		    add_region_attribute(key);
                 }
                 _via_images[image_id].regions.push(regioni);
+		console.log(regioni);
                 region_import_count += 1;
             }
         } else {
