@@ -364,7 +364,6 @@
               <a onclick="delete_all_attributes()" title="Delete all attributes">Delete attributes</a>
             </div>
           </li>
-          <li><a onclick="show_settings_panel()" title="Change settings of VGG Image Annotator">Settings</a></li>
           <li class="dropdown"><a onclick="show_about_panel()" title="Help">Help &#9662</a>
             <div class="dropdown-content">
               <a href="https://gitlab.com/vgg/via/issues/new" target="_new" title="Report issues about this application">Report issue</a>
@@ -463,7 +462,7 @@
             <p>To begin the image annotation process, click <a title="Load images" style="cursor: pointer;" onclick="load_images()">Load images</a> in the Image menu.
           </div>
           
-          <div id="session_data_panel">
+          <div style="display: none;" id="session_data_panel">
             <span style="color: red">Annotations from previous session exists</span>
             <div id="image_annotation_list_snippet"></div>
             <button onclick="save_image_annotation_data('csv')">Download CSV</button>
@@ -490,7 +489,7 @@
               <li>supports following region shapes: rectangle, circle, ellipse, polygon</li>
               <li>supports multiple attributes for each image region</li>
               <li>import (and export) of region data from (to) text file in csv and json format</li>
-              <li>hundreds of images can be loaded and annotated with any performance degradation</li>
+              <li>hundreds of images can be loaded and annotated without any performance degradation</li>
             </ul>
             </p>
             <p>For more details, visit <a href="www.robots.ox.ac.uk/~vgg/software/via/">www.robots.ox.ac.uk/~vgg/software/via/</a></p>
@@ -501,7 +500,7 @@
     </div> <!-- end of wrapper -->
     <div id="message_panel"></div>
 
-    <script type="text/javascript" src="via_demo.js"></script>
+    <!--<script type="text/javascript" src="via_demo.js"></script>-->
     <script type="text/javascript" src="via.js">
       <!--AUTO_INSERT_VIA_JS_HERE-->
     </script>
