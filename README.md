@@ -1,25 +1,18 @@
-# VGG Image Annotator
+# VGG Face Annotator
+This application lets you mark and tag rectangular facial regions in an image. 
+It is a fork of [VGG Image Annotator](http://www.robots.ox.ac.uk/~vgg/software/via/) adapted for face annotation.
 
-VGG Image Annotator (via) is an open source project developed at the 
-[Visual Geometry Group](http://www.robots.ox.ac.uk/~vgg/) and released under 
-the BSD-2 clause license. This work is supported by EPSRC programme grant 
-Seebibyte: Visual Search for the Era of Big Data ([EP/M013774/1](http://www.seebibyte.org/index.html)).
-Visit the [VGG software page](http://www.robots.ox.ac.uk/~vgg/software/via/) for more details.
-
-### Features:
-  * based solely on HTML, CSS and Javascript (no dependecies on any javascript libraries)
-  * can be used offline (complete application packaged in a single html file of size < 200KB)
-  * requires nothing more than a modern web browser (tested on firefox and chrome)
-  * supports following region shapes: rectangle, circle, ellipse, polygon
-  * supports multiple attributes for each image region
-  * import (and export) of region data from (to) text file in csv and json format
-  * hundreds of images can be loaded and annotated with any performance degradation
-
-## Downloads
- * [via.html.zip](http://www.robots.ox.ac.uk/~vgg/software/via/downloads/via.html.zip) : the VGG Image Annotator application (< 200KB)
- * [via.html](http://www.robots.ox.ac.uk/~vgg/software/via/downloads/via.html) : online version of the application
- * [via demo](http://www.robots.ox.ac.uk/~vgg/software/via/demo/via_demo.html) : live demo (with preloaded images and regions)
- * [https://gitlab.com/vgg/via/](https://gitlab.com/vgg/via/) : source code repository
+## Getting started
+ 1. You should have received the ```vgg_face.html``` file. (if not, you can view it [here](http://vgg.gitlab.io/via/via_face.html) )
+ 2. To load new images, click [Image &rarr; Load or Add Images] and select the images that you wish to annotate
+ 3. Press the key n (or p) to move to next (or previous image)
+ 4. Click mouse right button and drag to draw a rectangular region around a face in the loaded image
+ 5. Now, to select this newly created rectangular region, click inside it.
+ 6. On the left hand side (in section Region Name), click on of the entries to tag this new region.
+ 7. After selecting a region, you can move or resize it.
+ 8. Remember to regularly save your work by clicking [Annotation &rarr; Save as CSV].
+ 9. Next time, to start from where you left, click [Annotation &rarr; Import] and point it to the CSV file saved in Step 8.
+ 10. You can jump to any image by clicking [Image &rarr; Show Loaded Image List] which shows a list of currently loaded images.
 
 ## Help:
 Software bug reports and feature requests should be [submitted here](https://gitlab.com/vgg/via/issues/new).
