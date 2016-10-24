@@ -250,7 +250,6 @@
       background-color: #ffffff;
       color: #000000;
       outline: thin solid;
-      border: collapse;
       }
       .clickable_tbl_entry:hover {
       background-color: #cccccc;
@@ -266,7 +265,7 @@
       #region_info_table td {
       padding: 1em;
       border: none;
-      border-collapse: none;
+      border-collapse: collapse;
       }
 
       /* image list */
@@ -355,11 +354,6 @@
               <a onclick="download_all_region_data('csv')" title="Save image region annotations as a CSV(comma separated value) file">Save as CSV</a>
               <a onclick="download_all_region_data('json')" title="Save image region annotations as a JSON(Javascript Object Notation) file">Save as JSON</a>
               <a onclick="upload_region_data_file()" title="Import existing region data from CSV or JSON file">Import</a>
-            </div>
-          </li>
-          <li class="dropdown"><a title="Attributes" class="drop_menu_item">Attributes &#9662</a>
-            <div class="dropdown-content">
-              <a onclick="import_attributes()" title="Import existing attributes from a file">Import attributes</a>
             </div>
           </li>
           <li class="dropdown"><a onclick="show_about_panel()" title="Help">Help &#9662</a>

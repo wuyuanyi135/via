@@ -46,6 +46,7 @@ var VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR = "#000000";
 var VIA_THEME_SEL_REGION_OPACITY = 0.5;
 var VIA_THEME_MESSAGE_TIMEOUT_MS = 5000;
 var VIA_THEME_ATTRIBUTE_IMG_WIDTH = 64;
+var VIA_THEME_ATTRIBUTE_VALUE_FONT = '10pt Sans';
 var VIA_IMPORT_CSV_COMMENT_CHAR = '#';
 var VIA_IMPORT_CSV_KEYVAL_SEP_CHAR = ';';
 var VIA_EXPORT_CSV_ARRAY_SEP_CHAR = ':';
@@ -429,10 +430,10 @@ function import_region_data_from_csv(data) {
                     
                     var attr_map = keyval_str_to_map( region_str );
 
-                    for ( var key of attr_map ) {
+                    for ( var key of attr_map.keys() ) {
+			val = attr_map.get(key);
                         if ( key == 'all_points_x' ||
                              key == 'all_points_y' ) {
-			    val = attr_map.get(key);
                             val = val.substring(1, val.length-1); // discard the square brackets []
                             var valdata = val.split(VIA_EXPORT_CSV_ARRAY_SEP_CHAR);
                             var val_as_array = [];
@@ -453,9 +454,8 @@ function import_region_data_from_csv(data) {
                     region_attr = region_attr.substring(1, region_attr.length-1); // remove prefix and suffix quotation marks
                     var region_attr_map = keyval_str_to_map( region_attr );
                     
-                    for ( var key of region_attr_map ) {
+                    for ( var key of region_attr_map.keys() ) {
                         regioni.region_attributes.set(key, region_attr_map.get(key));
-
 			add_region_attribute(key);
                     }
                 }               
@@ -469,14 +469,12 @@ function import_region_data_from_csv(data) {
     show_message('Imported ' + region_import_count + ' regions for ' + image_count + ' images from CSV file');
 
     _via_reload_img_table = true;
-    //_via_load_canvas_regions();
     show_image(_via_image_index);
     save_current_data_to_browser_cache();
 }
 
 function import_region_data_from_json(data) {
     var _via_images_as_json = JSON.parse(data);
-    console.log(_via_images_as_json);
     
     var image_count = 0;
     var region_import_count = 0;
@@ -507,7 +505,6 @@ function import_region_data_from_json(data) {
 		    add_region_attribute(key);
                 }
                 _via_images[image_id].regions.push(regioni);
-		console.log(regioni);
                 region_import_count += 1;
             }
         } else {
@@ -518,7 +515,6 @@ function import_region_data_from_json(data) {
     show_message('Imported ' + region_import_count + ' regions for ' + image_count + ' images from JSON file');
 
     _via_reload_img_table = true;
-    //_via_load_canvas_regions();
     show_image(_via_image_index);
 }
 
@@ -599,7 +595,7 @@ function package_region_data(return_type) {
             
             // copy file attributes
             image_data.file_attributes = {};    
-            for ( var key of _via_images[image_id].file_attributes ) {
+            for ( var key of _via_images[image_id].file_attributes.keys() ) {
 		var value = _via_images[image_id].file_attributes.get(key);
                 image_data.file_attributes[key] = value;
             }
@@ -616,7 +612,7 @@ function package_region_data(return_type) {
                     image_data.regions[i].shape_attributes[key] = value;
                 }
                 // copy region_attributes
-                for ( var key of _via_images[image_id].regions[i].region_attributes) {
+                for ( var key of _via_images[image_id].regions[i].region_attributes.keys()) {
 		    var value = _via_images[image_id].regions[i].region_attributes.get(key);
                     image_data.regions[i].region_attributes[key] = value;
                 }
@@ -629,8 +625,8 @@ function package_region_data(return_type) {
 }
 
 function attr_map_to_str(attr) {
-    var attr_map_str = '"';
-    for( var key of attr ) {
+    var attr_map_str = [];
+    for( var key of attr.keys() ) {
 	var value = attr.get(key);
         if ( Array.isArray(value) ) {
             var value_str='[' + value[0];
@@ -638,13 +634,14 @@ function attr_map_to_str(attr) {
                 value_str += VIA_EXPORT_CSV_ARRAY_SEP_CHAR + value[i];
             }
             value_str += ']';
-            attr_map_str = attr_map_str + key + '=' + value_str + ';';
+
+	    attr_map_str.push(key + '=' + value_str);
         } else {
-            attr_map_str = attr_map_str + key + '=' + value + ';';
+            attr_map_str.push(key + '=' + value);
         }
     }
-    attr_map_str += '"';
-    return attr_map_str;
+    var str_val = '"' + attr_map_str.join(VIA_IMPORT_CSV_KEYVAL_SEP_CHAR) + '"';
+    return str_val;
 }
 
 function save_data_to_local_file(data, filename) {
@@ -764,7 +761,7 @@ function _via_load_canvas_regions() {
     _via_canvas_regions  = [];
     for ( var i=0; i<regions.length; ++i) {
         var regioni = new ImageRegion();
-        for ( var key of regions[i].shape_attributes ) {
+        for ( var key of regions[i].shape_attributes.keys() ) {
             regioni.shape_attributes.set(key,
 					 regions[i].shape_attributes.get(key));
         }
@@ -1942,7 +1939,7 @@ function draw_all_region_attribute_value() {
             var y = bbox[1];
             var w = Math.abs(bbox[2] - bbox[0]);
             var h = Math.abs(bbox[3] - bbox[1]);
-            _via_ctx.font = '12pt Sans';
+            _via_ctx.font = VIA_THEME_ATTRIBUTE_VALUE_FONT;
 
 	    var spc_dot = _via_ctx.measureText('.').width;
             var bgnd_rect_height = 1.8 * _via_ctx.measureText('M').width;
@@ -2490,8 +2487,8 @@ window.addEventListener("keydown", function(e) {
 
     if ( e.which == 121 ) { // F10 key used for debugging
         print_current_state_vars();
+	print_current_image_data();
         e.preventDefault();
-        //print_current_image_data();
     }
     if (e.which == 113) { // F2 for about
         show_about_panel();
@@ -2806,14 +2803,14 @@ function print_current_image_data() {
         for ( var i=0; i<img_regions.length; ++i) {
             var attr = img_regions[i].shape_attributes;
             var img_region_str = '\n\t_via_images[i].regions.shape_attributes = [';
-            for ( var key of attr ) {
+            for ( var key of attr.keys() ) {
                 img_region_str += key + ':' + attr.get(key) + ';';
             }
             logstr += img_region_str + ']';
 
             var attr = img_regions[i].region_attributes;
             var img_region_str = '\n\t_via_images[i].regions.region_attributes = [';
-            for ( var key of attr ) {
+            for ( var key of attr.keys() ) {
                 img_region_str += key + ':' + attr.get(key) + ';';
             }
             logstr += img_region_str + ']';         
@@ -2822,7 +2819,7 @@ function print_current_image_data() {
         if ( _via_image_id == image_id ) {
             for ( var i=0; i<_via_canvas_regions.length; ++i) {
                 var canvas_region_str = '\n\t_via_canvas_regions = [';
-                for ( var key of _via_canvas_regions[i].shape_attributes ) {
+                for ( var key of _via_canvas_regions[i].shape_attributes.keys() ) {
 		    var value = _via_canvas_regions[i].shape_attributes.get(key);
                     canvas_region_str += key + ':' + value + ';';
                 }
