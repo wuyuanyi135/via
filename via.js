@@ -77,6 +77,7 @@ var _via_is_user_resizing_region = false;
 var _via_is_user_moving_region = false;
 var _via_is_user_drawing_polygon = false;
 var _via_is_region_selected = false;
+var _via_is_all_region_selected = false;
 var _via_is_user_updating_attribute_name = false;
 var _via_is_user_updating_attribute_value = false;
 var _via_is_user_adding_attribute_name = false;
@@ -189,7 +190,8 @@ function main() {
     
     _via_is_local_storage_available = check_local_storage();
 
-    show_home_panel();   
+    show_home_panel();
+    import_region_attributes_from_json(_via_face_attributes);
     //start_demo_session(); // defined in via_demo.js
 }
 
@@ -824,16 +826,31 @@ function clear_image_display_area() {
 
 function delete_selected_regions() {
     var del_region_count = 0;
-    for (var i=0; i<_via_canvas_regions.length; ++i) {
-        if (_via_canvas_regions[i].is_user_selected) {
-            _via_canvas_regions.splice(i, 1);
-            _via_images[_via_image_id].regions.splice(i, 1);
-            del_region_count += 1;
-        }
+    if (_via_is_all_region_selected) {
+	del_region_count = _via_canvas_regions.length;	
+	_via_canvas_regions.splice(0);
+	_via_images[_via_image_id].regions.splice(0);
+    } else {
+	var sorted_sel_reg_id = [];
+	for (var i=0; i<_via_canvas_regions.length; ++i) {
+            if (_via_canvas_regions[i].is_user_selected) {
+		sorted_sel_reg_id.push(i);
+            }
+	}	
+	sorted_sel_reg_id.sort( function(a,b) {
+	    return (b-a);
+	});
+	for (var i=0; i<sorted_sel_reg_id.length; ++i) {
+	    _via_canvas_regions.splice( sorted_sel_reg_id[i], 1);
+	    _via_images[_via_image_id].regions.splice( sorted_sel_reg_id[i], 1);
+	    del_region_count += 1;
+	}
     }
 
-    _via_is_region_selected = false;    
+    _via_is_all_region_selected = false;
+    _via_is_region_selected = false;
     _via_user_sel_region_id = -1;
+    
     _via_redraw_canvas();
     _via_canvas.focus();
     show_region_shape_info();
@@ -1649,9 +1666,12 @@ function count_missing_attribute_value(img_id) {
 function _via_redraw_canvas() {
     if (_via_current_image_loaded) {
         _via_ctx.drawImage(_via_current_image, 0, 0, _via_canvas_width, _via_canvas_height);
-        draw_all_regions();
-        //draw_all_region_id();
-	draw_all_region_attribute_value();
+
+	if ( _via_canvas_regions.length > 0 ) {
+            draw_all_regions();
+            //draw_all_region_id();
+	    draw_all_region_attribute_value();
+	}
     }
 }
 
@@ -1963,7 +1983,7 @@ function draw_all_region_attribute_value() {
     }
 }
 
-function get_canvas_region_bounding_box(region_id) {
+function get_canvas_region_bounding_box(region_id) {   
     var bbox = new Array(4);
     var d = _via_canvas_regions[region_id].shape_attributes;
     switch( d.get('name') ) {
@@ -2339,11 +2359,10 @@ window.addEventListener("keydown", function(e) {
         }
 
         if ( e.which == 65 ) { // Ctrl + a
-            for (var i=0; i<_via_canvas_regions.length; ++i) {
-                _via_canvas_regions[i].is_user_selected = true;
-            }
-            _via_is_region_selected = true;
+	    toggle_all_regions_selection(true);
+	    _via_is_all_region_selected = true;
             _via_redraw_canvas();
+
             show_current_attributes();
             e.preventDefault();
             return;
@@ -2607,32 +2626,30 @@ function show_filename_info() {
 //
 function show_current_attributes() {
     var region_info = [];
-
     if (_via_region_attributes.size > 0) {
 	for (var attribute of _via_region_attributes) {
+	    var param = _via_region_attributes_param.get(attribute);
 
-	    if (_via_is_region_selected) {
-		var region = _via_images[_via_image_id].regions[_via_user_sel_region_id];
-		var param = _via_region_attributes_param.get(attribute);
-
-		for (var i=0; i<param.get('image_base64_data').length; ++i) {
-		    var img_data = param.get('image_base64_data')[i];
-		    var real_name = param.get('real_name')[i];
-		    var other_name = param.get('other_name')[i];
-
+	    for (var i=0; i<param.get('image_base64_data').length; ++i) {
+		var img_data = param.get('image_base64_data')[i];
+		var real_name = param.get('real_name')[i];
+		var other_name = param.get('other_name')[i];
+		if (_via_is_region_selected &&
+		    _via_user_sel_region_id != -1) {
+		    var region = _via_images[_via_image_id].regions[_via_user_sel_region_id];
+		    
 		    var action = 'set_region_attribute_value(' + _via_user_sel_region_id + ', \'' + attribute + '\', \'' + other_name + '\')';
 		    if (region.region_attributes.get(attribute) == other_name) {
 			region_info.push('<tr class="clickable_tbl_entry highlighted_tbl_entry" onclick="' + action + '">');
 		    } else {
 			region_info.push('<tr class="clickable_tbl_entry" onclick="' + action + '">');
 		    }
-		    
-		    region_info.push('<td><img width="' + VIA_THEME_ATTRIBUTE_IMG_WIDTH + '" src="' + img_data + '" alt="' + real_name + '"></td>');
-		    region_info.push('<td>' + real_name + '<br/>(' + other_name + ')</td>');
-		    region_info.push('</tr>');
+		} else {
+		    region_info.push('<tr>');
 		}
-	    } else {
-		region_info.push('<tr><td>' + attribute + '</td></tr>');
+		region_info.push('<td><img width="' + VIA_THEME_ATTRIBUTE_IMG_WIDTH + '" src="' + img_data + '" alt="' + real_name + '"></td>');
+		region_info.push('<td>' + real_name + '<br/>(' + other_name + ')</td>');
+		region_info.push('</tr>');
 	    }
 	}
     } else {
@@ -2819,8 +2836,19 @@ function print_current_image_data() {
         if ( _via_image_id == image_id ) {
             for ( var i=0; i<_via_canvas_regions.length; ++i) {
                 var canvas_region_str = '\n\t_via_canvas_regions = [';
+		canvas_region_str += 'selected=' + _via_canvas_regions[i].is_user_selected + ';';
+                logstr += canvas_region_str + ']';
+		
+		var canvas_region_str = '\n\t_via_canvas_regions[i].shape_attributes = [';
                 for ( var key of _via_canvas_regions[i].shape_attributes.keys() ) {
 		    var value = _via_canvas_regions[i].shape_attributes.get(key);
+                    canvas_region_str += key + ':' + value + ';';
+                }
+                logstr += canvas_region_str + ']';
+
+		var canvas_region_str = '\n\t_via_canvas_regions[i].region_attributes = [';
+		for ( var key of _via_canvas_regions[i].region_attributes.keys() ) {
+		    var value = _via_canvas_regions[i].region_attributes.get(key);
                     canvas_region_str += key + ':' + value + ';';
                 }
                 logstr += canvas_region_str + ']';
