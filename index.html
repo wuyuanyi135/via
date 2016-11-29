@@ -296,7 +296,7 @@
       z-index: 2;
       bottom: 0;
       width: 100%;
-      max-height: 40%;
+      height: 180px;
       overflow: auto;
       background-color: #ffffff;
       border-top: 4px solid #000000;
@@ -362,6 +362,24 @@
       cursor: pointer;
       }
 
+      /* face label */
+      .face_label {
+      display: inline-block;
+      padding: 1em 1em;
+      padding-bottom: 1em;
+      font-family: Sans;
+      font-size: xx-small;
+      text-align: center;
+      }
+      .face_label:hover {
+      background-color: #e6e6e6;
+      color: #ff0000;
+      cursor: pointer;
+      }
+      .face_label.selected {
+      background-color: #e6e6e6;
+      color: #ff0000;
+      }
     </style>
   </head>
 
@@ -430,7 +448,7 @@
           <li><a onclick="show_home_panel()" title="Home">Home</a></li>
           <li class="dropdown"><a title="Image" class="drop_menu_item">Image &#9662</a>
             <div class="dropdown-content">
-              <a onclick="load_images()" title="Load (or add) a set of images from local disk">Load or Add Images</a>
+              <a onclick="load_images('image')" title="Load (or add) a set of images from local disk">Load or Add Images</a>
               <a onclick="show_img_list()" title="Browse currently loaded images">Show Loaded Image List</a>
             </div>
           </li>
@@ -441,6 +459,12 @@
               <a onclick="upload_region_data_file()" title="Import existing region data from CSV or JSON file">Import</a>
             </div>
           </li>
+          <li class="dropdown"><a title="Face Labels" class="drop_menu_item">Face Labels &#9662</a>
+            <div class="dropdown-content">
+              <a onclick="load_images('face_label')" title="Import face labels from images">Import from images</a>
+            </div>
+          </li>
+
           <li class="dropdown"><a onclick="show_about_panel()" title="Help">Help &#9662</a>
             <div class="dropdown-content">
               <a onclick="show_about_panel()" title="About VGG Image Annotator (VIA)">About VIA</a>
@@ -450,7 +474,7 @@
 
         <div id="image_info">
           <div style="display: inline-block; fill: white; stroke: white;" ><a onclick="toggle_img_list()" title="Browse currently loaded images" class="svg_button"><svg width="18" viewBox="0 0 32 32"><use xlink:href="#icon_img_list"></use></svg></a></div>
-          <span id="info_current_fileid"></span> <span id="info_current_filename"><span class="action_text_link" onclick="load_images()" title="Import existing attributes from a file">[click to load images]</span></span>
+          <span id="info_current_fileid"></span> <span id="info_current_filename"><span class="action_text_link" onclick="load_images('image')" title="load local images">[click to load images]</span></span>
 
           <span id="info_region" style="display: none;"></span>
           <span id="info_attribute" style="display: none;"></span>
@@ -525,7 +549,7 @@
           <canvas id="image_canvas">Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.</canvas>
 
           <div id="via_start_info_panel">
-            <p>To begin the image annotation process, click <a title="Load images" style="cursor: pointer;" onclick="load_images()">Load images</a> in the Image menu.
+            <p>To begin the image annotation process, click <a title="Load images" style="cursor: pointer;" onclick="load_images('image')">Load images</a> in the Image menu.
           </div>
 
           <div id="img_list_panel"></div>
@@ -561,22 +585,7 @@
     
     <div id="attributes_input_panel">
       <span id="panel_close_button" onclick="toggle_attributes_input_panel()">&times</span>
-
-      <!-- Region Attributes -->
-      <div>
-        <div style="display: inline-block;" class="title">Regions Attributes</div>
-        <div style="display: inline-block;" ><a onclick="toggle_table_width('region_attr_table')" title="Change table width (100% or auto)" class="svg_button"><svg width="12" viewBox="0 0 32 32"><use xlink:href="#icon_resize"></use></svg></a></div>
-        <div style="display: inline-block;" ><a onclick="toggle_table_layout('region_attr_table')" title="Change table layout (fixed or auto)" class="svg_button"><svg width="12" viewBox="0 0 32 32"><use xlink:href="#icon_table"></use></svg></a></div>
-      </div>
-      <table id="region_attr_table"></table>
-
-      <!-- File Attributes -->
-      <div>
-        <div style="display: inline-block;" class="title">File Attributes</div>
-        <div style="display: inline-block;" ><a onclick="toggle_table_width('file_attr_table')" title="Change table width (100% or auto)" class="svg_button"><svg width="12" viewBox="0 0 32 32"><use xlink:href="#icon_resize"></use></svg></a></div>
-        <div style="display: inline-block;" ><a onclick="toggle_table_layout('file_attr_table')" title="Change table layout (fixed or auto)" class="svg_button"><svg width="12" viewBox="0 0 32 32"><use xlink:href="#icon_table"></use></svg></a></div>
-      </div>
-      <table id="file_attr_table"></table>
+      <div id="face_label_panel"></div>
     </div>
     
     <!--<script type="text/javascript" src="via_demo.js">-->
