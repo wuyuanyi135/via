@@ -31,6 +31,10 @@ var VIA_NAME = 'VGG Face Annotator';
 var VIA_SHORT_NAME = 'VFA';
 var VIA_REGION_SHAPE = { RECT:'rect'};
 
+var VIA_SPECIAL_CHAR_SUBS = {',':'[comma]',
+			     ':':'[colon]',
+			     ';':'[scolon]',
+			     '=':'[equal]'};
 var VIA_REGION_EDGE_TOL = 5;
 var VIA_REGION_MIN_DIM = 5;
 var VIA_THETA_TOL = Math.PI/18; // 10 degrees
@@ -199,7 +203,6 @@ function show_home_panel() {
         via_start_info_panel.style.display = "none";
         about_panel.style.display = "none";
     } else {
-        via_start_info_panel.innerHTML = '<p>To begin the image annotation process, click <span class="action_text_link" onclick="load_images()" title="Load Images">[Load Images]</span> in the Image menu.';
         via_start_info_panel.style.display = "block";
         about_panel.style.display = "none";
         _via_canvas.style.display = "none";
@@ -393,110 +396,34 @@ function import_region_data_from_csv(data) {
     var image_count = 0;
     for (var i=0; i<csvdata.length; ++i) {
         if (csvdata[i].charAt(0) == VIA_IMPORT_CSV_COMMENT_CHAR) {
-            // parse header
-            // #filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes
-            var d = csvdata[i].substring(1, csvdata[i].length); // remove #
-            d = d.split(',');
-            var filename_index, size_index, file_attr_index, region_shape_attr_index
-            for ( var j=0; j<d.length; ++j) {
-                switch ( d[j] ) {
-                case 'filename':
-                    filename_index = j;
-                    break;
-                case 'file_size':
-                    size_index = j;
-                    break;
-                case 'file_attributes':
-                    file_attr_index = j;
-                    break;
-                case 'region_shape_attributes':
-                    region_shape_attr_index = j;
-                    break;
-                case 'region_attributes':
-                    region_attr_index = j;
-                    break;
-                }
-            }
+            // ignore header
+            // #filename,file_size,face_count,face_id,x,y,width,height,face_label
             continue;
         } else {
             var d = csvdata[i].split(',');
+	    if (d.length != 9) {
+		// ignore row
+		continue;
+	    }
             
-            var filename = d[filename_index];
-            var size = d[size_index];
+            var filename = d[0];
+            var size = d[1];
             var image_id = _via_get_image_id(filename, size);
             if ( _via_images.hasOwnProperty(image_id) ) {
                 image_count += 1;
                 
-                // copy image attributes
-                if ( d[file_attr_index] != '' ||
-                     d[file_attr_index] != '""') {
-                    var file_attr_str = d[file_attr_index];
-                    file_attr_str = file_attr_str.substring(1, file_attr_str.length-1); // remove prefix and suffix quotation marks
-
-                    var attr_map = keyval_str_to_map( file_attr_str );
-                    for( var key of attr_map.keys() ) {
-			var val = attr_map.get(key);
-			val = substitute_special_chars(val);
-                        _via_images[image_id].file_attributes.set(key, val);
-
-                        if (!_via_file_attributes.has(key)) {
-                            _via_file_attributes.add(key);
-                        }
-                        file_attr_count += 1;
-                    }
-                }
-
                 var regioni = new ImageRegion();
-                // copy regions shape attributes
-                if ( d[region_shape_attr_index] != '""' ||
-                     d[region_shape_attr_index] != '' ) {                   
-                    var region_str = d[region_shape_attr_index];
-                    region_str = region_str.substring(1, region_str.length-1); // remove prefix and suffix quotation marks
-                    
-                    var attr_map = keyval_str_to_map( region_str );
+		regioni.shape_attributes.set('x', d[4]);
+		regioni.shape_attributes.set('y', d[5]);
+		regioni.shape_attributes.set('width', d[6]);
+		regioni.shape_attributes.set('height', d[7]);
 
-                    for ( var key of attr_map.keys() ) {
-                        var val = attr_map.get(key);
-                        if ( key == 'all_points_x' ||
-                             key == 'all_points_y' ) {
-                            val = val.substring(1, val.length-1); // discard the square brackets []
-                            var valdata = val.split(VIA_EXPORT_CSV_ARRAY_SEP_CHAR);
-                            var val_as_array = [];
-                            for (var j=0; j<valdata.length; ++j) {
-                                val_as_array.push( parseInt(valdata[j]) );
-                            }
-                            regioni.shape_attributes.set(key, val_as_array);
-                        } else {
-                            regioni.shape_attributes.set(key, val);
-                        }
-                    }
-                }
-
-                // copy region attributes
-                if ( d[region_attr_index] != '""' ||
-                     d[region_attr_index] != '' ) {                 
-                    var region_attr = d[region_attr_index];
-                    region_attr = region_attr.substring(1, region_attr.length-1); // remove prefix and suffix quotation marks
-                    var region_attr_map = keyval_str_to_map( region_attr );
-                    
-                    for ( var key of region_attr_map.keys() ) {
-                        var val = region_attr_map.get(key);
-			val = substitute_special_chars(val);
-                        regioni.region_attributes.set(key, val);
-
-                        if (!_via_region_attributes.has(key)) {
-                            _via_region_attributes.add(key);
-                        }
-                    }
-                }
-
-                // add regions only if they are present         
-                if (regioni.shape_attributes.size > 0 ||
-                    regioni.region_attributes.size >0 ) {
-                    _via_images[image_id].regions.push(regioni);
-                    region_import_count += 1;
-                }
-            }
+		var rattr = d[8].replace(/"/g, '');
+		regioni.region_attributes.set(VIA_FACE_LABEL_ATTR_NAME, rattr);
+             
+                _via_images[image_id].regions.push(regioni);
+                region_import_count += 1;
+	    }
         }
     }
     show_message('Imported [' + region_import_count + '] regions and [' + file_attr_count + '] file attributes for ' + image_count + ' images from CSV file', VIA_THEME_MESSAGE_TIMEOUT_MS);
@@ -517,18 +444,6 @@ function import_region_data_from_json(data) {
         if ( _via_images.hasOwnProperty(image_id) ) {
             image_count += 1;
             
-            // copy image attributes
-            for (var key in d[image_id].file_attributes) {
-                if (!_via_images[image_id].file_attributes.get(key)) {
-                    _via_images[image_id].file_attributes.set(key,
-                                                              d[image_id].file_attributes[key]);
-                    file_attr_count += 1;
-                }
-                if (!_via_file_attributes.has(key)) {
-                    _via_file_attributes.add(key);
-                }
-            }
-
             // copy regions
             var regions = d[image_id].regions;
             for (var i in regions) {
@@ -618,27 +533,27 @@ function load_local_image(file, callback_function) {
 function package_region_data(return_type) {
     if( return_type == "csv" ) {
         var csvdata = [];
-        var csvheader = "#filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes";
+        var csvheader = '#filename,file_size,face_count,face_id,x,y,width,height,' + VIA_FACE_LABEL_ATTR_NAME;
         csvdata.push(csvheader);
 
         for ( var image_id in _via_images ) {
             var prefix_str = _via_images[image_id].filename;
             prefix_str += "," + _via_images[image_id].size;
-            prefix_str += "," + attr_map_to_str( _via_images[image_id].file_attributes );
 
             var regions = _via_images[image_id].regions;
 
             if (regions.length !=0) {
                 for (var i=0; i<regions.length; ++i) {
                     var region_shape_attr_str = regions.length + ',' + i + ',';
-                    region_shape_attr_str += attr_map_to_str( regions[i].shape_attributes );
+		    region_shape_attr_str += regions[i].shape_attributes.get('x') + ',';
+		    region_shape_attr_str += regions[i].shape_attributes.get('y') + ',';
+		    region_shape_attr_str += regions[i].shape_attributes.get('width') + ',';
+		    region_shape_attr_str += regions[i].shape_attributes.get('height');
 
-                    var region_attr_str = attr_map_to_str( regions[i].region_attributes );
+                    var region_attr_str = '"' + regions[i].region_attributes.get(VIA_FACE_LABEL_ATTR_NAME) + '"';
                     
                     csvdata.push('\n' + prefix_str + ',' + region_shape_attr_str + ',' + region_attr_str);
                 }
-            } else {
-                csvdata.push('\n' + prefix_str + ',0,,"",""');
             }
         }
         return csvdata;
@@ -648,20 +563,9 @@ function package_region_data(return_type) {
         var _via_images_as_obj = {};
         for (image_id in _via_images) {
             var image_data = {};
-            //image_data.fileref = _via_images[image_id].fileref;
-            image_data.fileref = '';
             image_data.size = _via_images[image_id].size;
             image_data.filename = _via_images[image_id].filename;
-            image_data.base64_img_data = '';
-            //image_data.base64_img_data = _via_images[image_id].base64_img_data;
             
-            // copy file attributes
-            image_data.file_attributes = {};    
-            for ( var key of _via_images[image_id].file_attributes.keys() ) {
-                var value = _via_images[image_id].file_attributes.get(key);
-                image_data.file_attributes[key] = value;
-            }
-
             // copy all region shape_attributes
             image_data.regions = {};
             for (var i=0; i<_via_images[image_id].regions.length; ++i) {
@@ -1395,7 +1299,11 @@ function jump_to_image(image_index) {
 function count_missing_region_attr(img_id) {
     var miss_region_attr_count = 0;
     for( var i=0; i<_via_images[img_id].regions.length; ++i) {
-	miss_region_attr_count += _via_region_attributes.size - _via_images[img_id].regions[i].region_attributes.size;
+	var rattr = _via_images[img_id].regions[i].region_attributes;
+	if (rattr.get(VIA_FACE_LABEL_ATTR_NAME) == 'undefined' ||
+	    rattr.get(VIA_FACE_LABEL_ATTR_NAME) == '' ) {
+	    miss_region_attr_count += 1;
+	}
     }
     return miss_region_attr_count;
 }
@@ -2147,9 +2055,13 @@ function update_attributes_input_panel() {
 	for (var i=0; i<_via_face_label_list.length; ++i) {
 	    if ( typeof(_via_face_label_list[i]) !== 'undefined') {
 		if ( selregion_id == i) {
-		    face_label_html.push('<div class="face_label selected">');
+		    face_label_html.push('<div class="active_face_label selected">');
 		} else {
-		    face_label_html.push('<div class="face_label">');
+		    if (_via_is_region_selected) {
+			face_label_html.push('<div class="active_face_label">');
+		    } else {
+			face_label_html.push('<div class="face_label">');
+		    }
 		}
 		face_label_html.push('<img title="' + _via_face_label_list[i] + '"');
 		face_label_html.push(' src="' + _via_face_label_img_list[i] + '"');
@@ -2190,16 +2102,12 @@ function print_current_state_vars() {
                 '\n_via_is_user_resizing_region'+_via_is_user_resizing_region+
                 '\n_via_is_user_moving_region'+_via_is_user_moving_region+
                 '\n_via_is_user_drawing_polygon'+_via_is_user_drawing_polygon+
-                '\n_via_is_region_selected'+_via_is_region_selected+
-                '\n_via_is_user_updating_attribute_name'+_via_is_user_updating_attribute_name+
-                '\n_via_is_user_updating_attribute_value'+_via_is_user_updating_attribute_value+
-		'\n_via_is_user_adding_attribute_name'+_via_is_user_adding_attribute_name);
+                '\n_via_is_region_selected'+_via_is_region_selected);
 }
 
 function print_current_image_data() {
     console.log(_via_images);
     for ( var image_id in _via_images) {
-        console.log(fn);
         var fn = _via_images[image_id].filename;
         var logstr = [];
         logstr.push("[" + fn + "] : ");
@@ -2231,6 +2139,6 @@ function print_current_image_data() {
                 logstr.push(canvas_region_str + ']');
             }
         }
-        //console.log(logstr.join(''));
+        console.log(logstr.join(''));
     }
 }
