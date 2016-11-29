@@ -549,8 +549,14 @@
         <div class="box" id="image_panel">
           <canvas id="image_canvas">Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.</canvas>
 
-          <div id="via_start_info_panel">
-            <p>To begin the image annotation process, click <span class="action_text_link" title="Load images"onclick="load_images('image')">[Load images]</span> in the Image menu.
+          <div id="via_start_info_panel" style="width: 40em;">
+	    <p>Quick start guide for face annotator:</p>
+	    <p>
+	      <ol>
+		<li>Import the list of representative face images using <span style="cursor: pointer" title="Load face label images" onclick="load_images('face_label')">[Face Labels &rarr; Import from Images</span>]</li>
+		<li><span style="cursor: pointer" title="Load images"onclick="load_images('image')">[Load the images]</span> that you wish to annotate, draw rectangular regions by clicking and dragging the mouse cursor and select a face from the list of representative faces.</li>
+	      </ol>
+	    </p>
           </div>
 
           <div id="img_list_panel"></div>

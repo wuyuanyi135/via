@@ -1950,7 +1950,7 @@ function show_localStorage_recovery_options() {
     var hstr = [];
     var date_of_saved_data = new Date( parseInt(localStorage.getItem('_via_timestamp')) );
     
-    hstr.push('<div style="padding: 1em; border: 1px solid #cccccc;">');
+    hstr.push('<div style="margin-top: 4em; padding: 1em; border: 1px solid #cccccc;">');
     hstr.push('<h3 style="border-bottom: 1px solid #5599FF">Data Recovery from Browser Cache</h3>');
     hstr.push('<ul><li>Data saved on : ' + date_of_saved_data);
     hstr.push('<br/><span class="action_text_link" onclick="download_localStorage_data(\'csv\')" title="Recover annotation data">[Save as CSV]</span>');
