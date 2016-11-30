@@ -32,15 +32,16 @@ var VIA_SHORT_NAME = 'VFA';
 var VIA_REGION_SHAPE = { RECT:'rect'};
 
 var VIA_SPECIAL_CHAR_SUBS = {',':'[comma]',
-			     ':':'[colon]',
-			     ';':'[scolon]',
-			     '=':'[equal]'};
+                             ':':'[colon]',
+                             ';':'[scolon]',
+                             '=':'[equal]'};
 var VIA_REGION_EDGE_TOL = 5;
 var VIA_REGION_MIN_DIM = 5;
 var VIA_CANVAS_ZOOM_LEVELS = [0.25, 0.5, 0.75, 1.0, 2.0, 3.0, 4.0];
 var VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX = 3;
 var VIA_FACE_LABEL_ATTR_NAME = 'face_label';
 var VIA_FACE_LABEL_MAX_SIZE_KB = 512;
+var VIA_MAX_CSV_DOWNLOAD_SIZE_MB = 2;
 
 var VIA_THEME_REGION_BOUNDARY_WIDTH = 4;
 var VIA_THEME_BOUNDARY_LINE_COLOR = "#1a1a1a";
@@ -49,8 +50,6 @@ var VIA_THEME_SEL_REGION_FILL_COLOR = "#808080";
 var VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR = "#000000";
 var VIA_THEME_SEL_REGION_OPACITY = 0.5;
 var VIA_THEME_MESSAGE_TIMEOUT_MS = 3000;
-var VIA_THEME_ATTRIBUTE_IMG_WIDTH = 64;
-var VIA_THEME_ATTRIBUTE_VALUE_FONT = '10pt Sans';
 var VIA_IMPORT_CSV_COMMENT_CHAR = '#';
 var VIA_IMPORT_CSV_KEYVAL_SEP_CHAR = ';';
 var VIA_EXPORT_CSV_ARRAY_SEP_CHAR = ':';
@@ -118,25 +117,35 @@ var _via_loaded_img_fn_list = [];
 var _via_loaded_img_region_attr_miss_count = [];
 var _via_loaded_img_table_html = [];
 
-
 // UI html elements
 var invisible_file_input = document.getElementById("invisible_file_input");
 
 var image_panel = document.getElementById("image_panel");
 var navbar_panel = document.getElementById("navbar");
-var info_panel = document.getElementById("info_panel");
 
 var loaded_img_list_panel = document.getElementById('loaded_img_list_panel');
 var attributes_input_panel = document.getElementById('attributes_input_panel');
 var face_label_panel = document.getElementById('face_label_panel');
 
-var BBOX_LINE_WIDTH = 4;
-var BBOX_BOUNDARY_FILL_COLOR_ANNOTATED = "#f2f2f2";
-var BBOX_BOUNDARY_FILL_COLOR_NEW = "#aaeeff";
-var BBOX_BOUNDARY_LINE_COLOR = "#1a1a1a";
-var BBOX_SELECTED_FILL_COLOR = "#ffffff";
-var BBOX_SELECTED_OPACITY = 0.3;
+function main() {
+    show_message(VIA_NAME + ' (' + VIA_SHORT_NAME + ') version ' + VIA_VERSION + '. Ready !',
+                 2*VIA_THEME_MESSAGE_TIMEOUT_MS);
+    show_home_panel();
+    //start_demo_session(); // defined in via_demo.js
+    
+    _via_is_local_storage_available = check_local_storage();
+    if (_via_is_local_storage_available) {
+        if (is_via_data_in_localStorage()) {
+            show_localStorage_recovery_options();
+        }
+    }
 
+    _via_region_attributes.add(VIA_FACE_LABEL_ATTR_NAME);
+}
+
+//
+// Data structures to hold image and annotation data
+//
 function ImageAttributes(fileref, filename, size) {
     this.filename = filename;
     this.size = size;
@@ -174,62 +183,38 @@ function _via_get_image_id(filename, size) {
     return filename + size;
 }
 
-function main() {
-    console.log(VIA_NAME);
-    show_message(VIA_NAME + ' (' + VIA_SHORT_NAME + ') version ' + VIA_VERSION + '. Ready !',
-                 2*VIA_THEME_MESSAGE_TIMEOUT_MS);
-    show_home_panel();
-    //start_demo_session(); // defined in via_demo.js
-    
-    _via_is_local_storage_available = check_local_storage();
-    //_via_is_local_storage_available = false;
-    if (_via_is_local_storage_available) {
-        if (is_via_data_in_localStorage()) {
-            show_localStorage_recovery_options();
-        }
-    }
-
-    _via_region_attributes.add(VIA_FACE_LABEL_ATTR_NAME);
-}
-
 //
 // Handlers for top navigation bar
 //
-function show_home_panel() {
-    clear_image_display_area();
-    if (_via_current_image_loaded) {
-        _via_canvas.style.display = "block";    
-    } else {
-        document.getElementById('start_info_panel').style.display = "block";
-    }
-}
-
 function load_images(type) {
     // source: https://developer.mozilla.org/en-US/docs/Using_files_from_web_applications
     if (invisible_file_input) {
-	invisible_file_input.accept='.jpg,.jpeg,.png,.bmp';
-	switch(type) {
-	case 'image':
-	    invisible_file_input.onchange = upload_local_images;
+        invisible_file_input.accept='.jpg,.jpeg,.png,.bmp';
+        switch(type) {
+        case 'image':
+            invisible_file_input.onchange = upload_local_images;
             invisible_file_input.click();
-	    break;
-	case 'face_label':
-	    invisible_file_input.onchange = upload_local_face_labels;
+            break;
+        case 'face_label':
+            invisible_file_input.onchange = upload_local_face_labels;
             invisible_file_input.click();
-	    break;
-	}       
+            break;
+        }       
     }
 }
 
 function download_all_region_data(type) {
-    var all_region_data = package_region_data(type);
-    var all_region_data_blob = new Blob(all_region_data, {type: 'text/'+type+';charset=utf-8'});
+    var d = package_region_data(type);
+    var dblob = new Blob( all_region_data,
+                          {type: 'text/'+type+';charset=utf-8'});
+    var size = dblob.size/(1024*1024);
 
-    if ( all_region_data_blob.size > (2*1024*1024) &&
-         type == 'csv' ) {
-        show_message('CSV file size is ' + (all_region_data_blob.size/(1024*1024)) + ' MB. We advise you to instead download as JSON');
+    if ( type == 'csv' &&
+         size > VIA_MAX_CSV_DOWNLOAD_SIZE_MB) {
+        show_message('CSV file size is ' + size + ' MB. We advise you to instead download as JSON',
+                     VIA_THEME_MESSAGE_TIMEOUT_MS);
     } else {
-        save_data_to_local_file(all_region_data_blob, 'via_region_data.'+type);
+        save_data_to_local_file(dblob, 'via_region_data.'+type);
     }
 }
 
@@ -241,36 +226,21 @@ function upload_region_data_file() {
     }
 
 }
-function save_attributes() {
-    if ( _via_region_attributes.size > 0 ) {
-        var attr_csvdata = [];
-        for (var attribute of _via_region_attributes) {
-            attr_csvdata.push(attribute);
-        }
-        var attr_blob = new Blob([attr_csvdata.join(',')], {type: 'text/csv;charset=utf-8'});
-        save_data_to_local_file(attr_blob, 'via_attributes_data.csv');
-    } else {
-        show_message("Attributes not defined yet!");
-    }
-}
-function import_attributes() {
+
+function show_home_panel() {
+    clear_image_display_area();
     if (_via_current_image_loaded) {
-        if (invisible_file_input) {
-            invisible_file_input.accept='.csv,.json';
-            invisible_file_input.onchange = import_region_attributes_from_file;
-            invisible_file_input.click();
-        }
+        _via_canvas.style.display = "block";    
     } else {
-        show_message("Please load some images first");
+        document.getElementById('start_info_panel').style.display = "block";
     }
 }
-function show_settings_panel() {
-    show_message("Not implemented yet!");
-}
+
 function show_about_panel() {
     clear_image_display_area();
     document.getElementById('about_panel').style.display = "block";
 }
+
 function show_getting_started_panel() {
     clear_image_display_area();
     document.getElementById('getting_started_panel').style.display = "block";
@@ -295,15 +265,19 @@ function upload_local_images(event) {
             var size = user_selected_images[i].size;
             var img_id = _via_get_image_id(filename, size);
 
-            if ( _via_images.hasOwnProperty(img_id) ) {
+            if (_via_images.hasOwnProperty(img_id)) {
                 if (_via_images[img_id].fileref) {
-                    show_message('Image ' + filename + ' already loaded. Skipping!');
+                    show_message('Image ' + filename + ' already loaded. Skipping!',
+                                 VIA_THEME_MESSAGE_TIMEOUT_MS);
                 } else {
                     _via_images[img_id].fileref = user_selected_images[i];
-                    show_message('Regions already exist for file ' + filename + ' !');              
+                    show_message('Regions already exist for file ' + filename + ' !',
+                                 VIA_THEME_MESSAGE_TIMEOUT_MS);
                 }
             } else {
-                _via_images[img_id] = new ImageAttributes(user_selected_images[i], filename, size);
+                _via_images[img_id] = new ImageAttributes(user_selected_images[i],
+                                                          filename,
+                                                          size);
                 _via_image_id_list.push(img_id);
                 _via_images_count += 1;
                 _via_reload_img_table = true;
@@ -333,13 +307,16 @@ function upload_local_images(event) {
 function upload_local_face_labels(event) {
     var selected_files = event.target.files;
     for (var i=0; i<selected_files.length; ++i) {
-	var file = selected_files[i];
-	if (file.type.includes('image/') &&
-	   file.size < 1024*VIA_FACE_LABEL_MAX_SIZE_KB) {
+        var file = selected_files[i];
+	var size = file.size/1024;
+	
+        if (file.type.includes('image/') &&
+            size < VIA_FACE_LABEL_MAX_SIZE_KB) {
             load_local_image(file);
-	} else {
-	    show_message('Discarded face label images  > ' + VIA_FACE_LABEL_MAX_SIZE_KB + 'KB', VIA_THEME_MESSAGE_TIMEOUT_MS);
-	}
+        } else {
+            show_message('Discarded face label images  > ' + VIA_FACE_LABEL_MAX_SIZE_KB + 'KB',
+			 VIA_THEME_MESSAGE_TIMEOUT_MS);
+        }
     }
 }
 
@@ -372,7 +349,8 @@ function import_region_attributes_from_csv(data) {
 
     _via_reload_img_table = true;
     show_region_attributes_info();
-    show_message('Imported ' + attributes_import_count + ' attributes from CSV file');
+    show_message('Imported ' + attributes_import_count + ' attributes from CSV file',
+		 VIA_THEME_MESSAGE_TIMEOUT_MS);
     save_current_data_to_browser_cache();
 }
 
@@ -391,6 +369,7 @@ function import_region_data_from_file(event) {
         }
     }
 }
+
 function import_region_data_from_csv(data) {
     var csvdata = data.split('\n');
     var region_import_count = 0;
@@ -403,10 +382,10 @@ function import_region_data_from_csv(data) {
             continue;
         } else {
             var d = csvdata[i].split(',');
-	    if (d.length != 9) {
-		// ignore row
-		continue;
-	    }
+            if (d.length != 9) {
+                // ignore row
+                continue;
+            }
             
             var filename = d[0];
             var size = d[1];
@@ -415,20 +394,23 @@ function import_region_data_from_csv(data) {
                 image_count += 1;
                 
                 var regioni = new ImageRegion();
-		regioni.shape_attributes.set('x', d[4]);
-		regioni.shape_attributes.set('y', d[5]);
-		regioni.shape_attributes.set('width', d[6]);
-		regioni.shape_attributes.set('height', d[7]);
+                regioni.shape_attributes.set('x', d[4]);
+                regioni.shape_attributes.set('y', d[5]);
+                regioni.shape_attributes.set('width', d[6]);
+                regioni.shape_attributes.set('height', d[7]);
 
-		var rattr = d[8].replace(/"/g, '');
-		regioni.region_attributes.set(VIA_FACE_LABEL_ATTR_NAME, rattr);
+                var rattr = d[8].replace(/"/g, '');
+                regioni.region_attributes.set(VIA_FACE_LABEL_ATTR_NAME, rattr);
              
                 _via_images[image_id].regions.push(regioni);
                 region_import_count += 1;
-	    }
+            }
         }
     }
-    show_message('Imported [' + region_import_count + '] regions and [' + file_attr_count + '] file attributes for ' + image_count + ' images from CSV file', VIA_THEME_MESSAGE_TIMEOUT_MS);
+    show_message('Imported [' + region_import_count + '] regions ' +
+		 ' and [' + file_attr_count + '] file attributes for ' +
+		 image_count + ' images from CSV file',
+		 VIA_THEME_MESSAGE_TIMEOUT_MS);
 
     _via_reload_img_table = true;
     show_image(_via_image_index);
@@ -471,7 +453,9 @@ function import_region_data_from_json(data) {
         }
     }
 
-    show_message('Imported [' + region_import_count + '] regions and [' + file_attr_count + '] file attributes for ' + image_count + ' images from JSON file', VIA_THEME_MESSAGE_TIMEOUT_MS);
+    show_message('Imported [' + region_import_count + '] regions' +
+		 ' and [' + file_attr_count + '] file attributes for ' +
+		 image_count + ' images from JSON file', VIA_THEME_MESSAGE_TIMEOUT_MS);
     
     _via_reload_img_table = true;
     show_image(_via_image_index);
@@ -522,9 +506,9 @@ function load_local_image(file, callback_function) {
     var img_reader = new FileReader();
 
     img_reader.addEventListener( "load", function() {
-	_via_face_label_list[file_id] = fileparts.join(' ');
-	_via_face_label_img_list[file_id] = img_reader.result;
-	update_attributes_input_panel();
+        _via_face_label_list[file_id] = fileparts.join(' ');
+        _via_face_label_img_list[file_id] = img_reader.result;
+        update_attributes_input_panel();
     });
     img_reader.readAsDataURL( file );
 }
@@ -535,26 +519,29 @@ function load_local_image(file, callback_function) {
 function package_region_data(return_type) {
     if( return_type == "csv" ) {
         var csvdata = [];
-        var csvheader = '#filename,file_size,face_count,face_id,x,y,width,height,' + VIA_FACE_LABEL_ATTR_NAME;
+        var csvheader = '#filename,file_size,face_count,face_id,x,y,width,height,';
+	csvheader += VIA_FACE_LABEL_ATTR_NAME;
         csvdata.push(csvheader);
 
         for ( var image_id in _via_images ) {
-            var prefix_str = _via_images[image_id].filename;
-            prefix_str += "," + _via_images[image_id].size;
+            var prefix = _via_images[image_id].filename;
+            prefix += "," + _via_images[image_id].size;
 
             var regions = _via_images[image_id].regions;
 
             if (regions.length !=0) {
                 for (var i=0; i<regions.length; ++i) {
-                    var region_shape_attr_str = regions.length + ',' + i + ',';
-		    region_shape_attr_str += regions[i].shape_attributes.get('x') + ',';
-		    region_shape_attr_str += regions[i].shape_attributes.get('y') + ',';
-		    region_shape_attr_str += regions[i].shape_attributes.get('width') + ',';
-		    region_shape_attr_str += regions[i].shape_attributes.get('height');
+                    var sdata = regions.length + ',' + i + ',';
+                    sdata += regions[i].shape_attributes.get('x') + ',';
+                    sdata += regions[i].shape_attributes.get('y') + ',';
+                    sdata += regions[i].shape_attributes.get('width') + ',';
+                    sdata += regions[i].shape_attributes.get('height');
 
-                    var region_attr_str = '"' + regions[i].region_attributes.get(VIA_FACE_LABEL_ATTR_NAME) + '"';
+                    var rdata = regions[i].region_attributes.get(VIA_FACE_LABEL_ATTR_NAME);
                     
-                    csvdata.push('\n' + prefix_str + ',' + region_shape_attr_str + ',' + region_attr_str);
+                    csvdata.push('\n' + prefix + ',' +
+				 region_shape_attr_str + ',' +
+				 '"' + rdata + '"');
                 }
             }
         }
@@ -603,7 +590,7 @@ function attr_map_to_str(attr) {
             value_str += ']';
             attr_map_str.push(key + '=' + value_str);
         } else {
-	    value = remove_special_chars(value);
+            value = remove_special_chars(value);
             attr_map_str.push(key + '=' + value);
         }
     }
@@ -614,7 +601,7 @@ function attr_map_to_str(attr) {
 function remove_special_chars(str) {
     str1 = str;
     for (var key in VIA_SPECIAL_CHAR_SUBS) {
-	str1 = str1.replace(key, VIA_SPECIAL_CHAR_SUBS[key]);
+        str1 = str1.replace(key, VIA_SPECIAL_CHAR_SUBS[key]);
     }
     return str1;
 }
@@ -622,8 +609,8 @@ function remove_special_chars(str) {
 function substitute_special_chars(str) {
     str1 = str;
     for (var key in VIA_SPECIAL_CHAR_SUBS) {
-	var value = VIA_SPECIAL_CHAR_SUBS[key];
-	str1 = str1.replace(value, key);
+        var value = VIA_SPECIAL_CHAR_SUBS[key];
+        str1 = str1.replace(value, key);
     }
     return str1;
 }
@@ -649,19 +636,19 @@ function save_data_to_local_file(data, filename) {
 //
 function show_image(image_index) {
     if (_via_is_loading_current_image) {
-	return;
+        return;
     }
     
     var img_id = _via_image_id_list[image_index]
     if (_via_images.hasOwnProperty(img_id)) {
         var img_filename = _via_images[img_id].filename;
         var img_reader = new FileReader();
-	_via_is_loading_current_image = true;
+        _via_is_loading_current_image = true;
 
-	img_reader.addEventListener( "loadstart", function(e) {
-	    document.getElementById("info_current_filename").innerHTML = "Loading image ...";
-	}, false);
-	
+        img_reader.addEventListener( "loadstart", function(e) {
+            document.getElementById("info_current_filename").innerHTML = "Loading image ...";
+        }, false);
+        
         img_reader.addEventListener( "progress", function(e) {
             //show_message("Loading image " + img_filename + " ... ", 1000);
         }, false);
@@ -677,7 +664,7 @@ function show_image(image_index) {
                 _via_image_index = image_index;
                 _via_current_image_filename = img_filename;
                 _via_current_image_loaded = true;
-		_via_is_loading_current_image = false;
+                _via_is_loading_current_image = false;
                 
                 // retrive image panel dim. to stretch _via_canvas to fit panel
                 //main_content_width = 0.9*image_panel.offsetWidth;
@@ -1021,7 +1008,7 @@ _via_canvas.addEventListener('mouseup', function(e) {
         }
         _via_redraw_canvas();
         _via_canvas.focus();
-	update_attributes_input_panel();
+        update_attributes_input_panel();
         return;
     }
 
@@ -1079,8 +1066,8 @@ _via_canvas.addEventListener('mouseup', function(e) {
             show_message('Skipped adding a ' + _via_current_shape + ' of nearly 0 dimension', VIA_THEME_MESSAGE_TIMEOUT_MS);
         }
         update_attributes_input_panel();
-	_via_reload_img_table = true;
-	show_img_list();
+        _via_reload_img_table = true;
+        show_img_list();
 
         _via_redraw_canvas();
         _via_canvas.focus();
@@ -1137,7 +1124,7 @@ _via_canvas.addEventListener('mousemove', function(e) {
                 case 4: // bottom-left corner of rect
                     _via_canvas.style.cursor = "nesw-resize";
                     break;
-		}
+                }
             } else {
                 var region_id = is_inside_region(_via_current_x, _via_current_y);
                 if ( region_id == _via_user_sel_region_id ) {
@@ -1253,7 +1240,7 @@ function toggle_img_list() {
         _via_is_loaded_img_list_visible = false;
         return;
     } else {
-	_via_is_loaded_img_list_visible = true;
+        _via_is_loaded_img_list_visible = true;
         show_img_list();
     }
 
@@ -1262,67 +1249,67 @@ function toggle_img_list() {
 // @todo: implement hierarchial clustering to better visualize file list
 function show_img_list() {
     if (_via_images_count == 0) {
-	show_message("Please load some images first!", VIA_THEME_MESSAGE_TIMEOUT_MS);
-	return;
+        show_message("Please load some images first!", VIA_THEME_MESSAGE_TIMEOUT_MS);
+        return;
     }
 
     if(_via_is_loaded_img_list_visible) {
-	if ( _via_reload_img_table ) {
-	    _via_loaded_img_fn_list = [];
-	    _via_loaded_img_region_attr_miss_count = [];
-	    
-	    for (var i=0; i<_via_images_count; ++i) {
-		img_id = _via_image_id_list[i];
-		_via_loaded_img_fn_list[i] = _via_images[img_id].filename;
-		_via_loaded_img_region_attr_miss_count[i] = count_missing_region_attr(img_id);
-	    }
-	    
-	    _via_loaded_img_table_html = [];
-	    //_via_loaded_img_table_html.push('<span style="display: block; border-bottom: 1px solid #5599ff;">Image List</span>');
-	    _via_loaded_img_table_html.push('<span id="panel_close_button" onclick="toggle_img_list()">&times</span>');
-	    _via_loaded_img_table_html.push('<h3>Image List</h3>');
-	    _via_loaded_img_table_html.push('<ul>');
-	    for (var i=0; i<_via_images_count; ++i) {
-		var fni = '';
-		if (i == _via_image_index) {
-		    // highlight the current entry
-		    fni += '<li style="cursor: default;"><b>[' + (i+1) + '] ' + _via_loaded_img_fn_list[i] + '</b>';
-		} else {
-		    fni += '<li onclick="jump_to_image(' + (i) + ')">[' + (i+1) + '] ' + _via_loaded_img_fn_list[i];
-		}
+        if ( _via_reload_img_table ) {
+            _via_loaded_img_fn_list = [];
+            _via_loaded_img_region_attr_miss_count = [];
+            
+            for (var i=0; i<_via_images_count; ++i) {
+                img_id = _via_image_id_list[i];
+                _via_loaded_img_fn_list[i] = _via_images[img_id].filename;
+                _via_loaded_img_region_attr_miss_count[i] = count_missing_region_attr(img_id);
+            }
+            
+            _via_loaded_img_table_html = [];
+            //_via_loaded_img_table_html.push('<span style="display: block; border-bottom: 1px solid #5599ff;">Image List</span>');
+            _via_loaded_img_table_html.push('<span id="panel_close_button" onclick="toggle_img_list()">&times</span>');
+            _via_loaded_img_table_html.push('<h3>Image List</h3>');
+            _via_loaded_img_table_html.push('<ul>');
+            for (var i=0; i<_via_images_count; ++i) {
+                var fni = '';
+                if (i == _via_image_index) {
+                    // highlight the current entry
+                    fni += '<li style="cursor: default;"><b>[' + (i+1) + '] ' + _via_loaded_img_fn_list[i] + '</b>';
+                } else {
+                    fni += '<li onclick="jump_to_image(' + (i) + ')">[' + (i+1) + '] ' + _via_loaded_img_fn_list[i];
+                }
 
-		if (_via_loaded_img_region_attr_miss_count[i]) {
-		    fni += ' (' + '<span style="color: red;">' + _via_loaded_img_region_attr_miss_count[i] + '</span>' + ')'
-		}
-		
-		fni += '</li>';
-		_via_loaded_img_table_html.push(fni);
-	    }
-	    _via_loaded_img_table_html.push('</ul>');
-	    _via_reload_img_table = false;
-	}
+                if (_via_loaded_img_region_attr_miss_count[i]) {
+                    fni += ' (' + '<span style="color: red;">' + _via_loaded_img_region_attr_miss_count[i] + '</span>' + ')'
+                }
+                
+                fni += '</li>';
+                _via_loaded_img_table_html.push(fni);
+            }
+            _via_loaded_img_table_html.push('</ul>');
+            _via_reload_img_table = false;
+        }
 
-	loaded_img_list_panel.innerHTML = _via_loaded_img_table_html.join('');
-	loaded_img_list_panel.style.width = "300px";
+        loaded_img_list_panel.innerHTML = _via_loaded_img_table_html.join('');
+        loaded_img_list_panel.style.width = "300px";
     }
 }
 
 function jump_to_image(image_index) {
     if ( image_index >=0 &&
-	 image_index < _via_images_count) {
-	show_image(image_index);
+         image_index < _via_images_count) {
+        show_image(image_index);
     }
 }
 
 function count_missing_region_attr(img_id) {
     var miss_region_attr_count = 0;
     for( var i=0; i<_via_images[img_id].regions.length; ++i) {
-	var rattr = _via_images[img_id].regions[i].region_attributes;
-	if (rattr.get(VIA_FACE_LABEL_ATTR_NAME) == 'undefined' ||
-	    rattr.get(VIA_FACE_LABEL_ATTR_NAME) == '' ||
-	    !rattr.has(VIA_FACE_LABEL_ATTR_NAME)) {
-	    miss_region_attr_count += 1;
-	}
+        var rattr = _via_images[img_id].regions[i].region_attributes;
+        if (rattr.get(VIA_FACE_LABEL_ATTR_NAME) == 'undefined' ||
+            rattr.get(VIA_FACE_LABEL_ATTR_NAME) == '' ||
+            !rattr.has(VIA_FACE_LABEL_ATTR_NAME)) {
+            miss_region_attr_count += 1;
+        }
     }
     return miss_region_attr_count;
 }
@@ -1333,65 +1320,65 @@ function count_missing_region_attr(img_id) {
 
 function _via_redraw_canvas() {
     if (_via_current_image_loaded) {
-	_via_ctx.clearRect(0, 0, _via_canvas.width, _via_canvas.height);
-	_via_ctx.drawImage(_via_current_image, 0, 0, _via_canvas.width, _via_canvas.height);
+        _via_ctx.clearRect(0, 0, _via_canvas.width, _via_canvas.height);
+        _via_ctx.drawImage(_via_current_image, 0, 0, _via_canvas.width, _via_canvas.height);
 
-	if ( _via_canvas_regions.length > 0 ) {
-	    draw_all_regions();
-	    draw_all_region_id();
-	}
+        if ( _via_canvas_regions.length > 0 ) {
+            draw_all_regions();
+            draw_all_region_id();
+        }
     }
 }
 
 function draw_all_regions() {
     for (var i=0; i < _via_canvas_regions.length; ++i) {
-	var attr = _via_canvas_regions[i].shape_attributes;
-	var is_selected = _via_canvas_regions[i].is_user_selected;
-	
-	_via_draw_rect_region(attr.get('x'),
-			      attr.get('y'),
-			      attr.get('width'),
-			      attr.get('height'),
-			      is_selected);
+        var attr = _via_canvas_regions[i].shape_attributes;
+        var is_selected = _via_canvas_regions[i].is_user_selected;
+        
+        _via_draw_rect_region(attr.get('x'),
+                              attr.get('y'),
+                              attr.get('width'),
+                              attr.get('height'),
+                              is_selected);
     }
 }
 
 function _via_draw_rect_region(x, y, w, h, is_selected) {
     if (is_selected) {
-	_via_draw_rect(x, y, w, h);
-	
-	_via_ctx.strokeStyle = VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR;
-	_via_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
-	_via_ctx.stroke();
+        _via_draw_rect(x, y, w, h);
+        
+        _via_ctx.strokeStyle = VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR;
+        _via_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
+        _via_ctx.stroke();
 
-	_via_ctx.fillStyle = VIA_THEME_SEL_REGION_FILL_COLOR;
-	_via_ctx.globalAlpha = VIA_THEME_SEL_REGION_OPACITY;
-	_via_ctx.fill();
-	_via_ctx.globalAlpha = 1.0;
+        _via_ctx.fillStyle = VIA_THEME_SEL_REGION_FILL_COLOR;
+        _via_ctx.globalAlpha = VIA_THEME_SEL_REGION_OPACITY;
+        _via_ctx.fill();
+        _via_ctx.globalAlpha = 1.0;
     } else {
-	// draw a fill line
-	_via_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
-	_via_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
-	_via_draw_rect(x, y, w, h);
-	_via_ctx.stroke();
+        // draw a fill line
+        _via_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
+        _via_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
+        _via_draw_rect(x, y, w, h);
+        _via_ctx.stroke();
 
-	if ( w > VIA_THEME_REGION_BOUNDARY_WIDTH &&
-	     h > VIA_THEME_REGION_BOUNDARY_WIDTH ) {
-	    // draw a boundary line on both sides of the fill line
-	    _via_ctx.strokeStyle = VIA_THEME_BOUNDARY_LINE_COLOR;
-	    _via_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/4;
-	    _via_draw_rect(x - VIA_THEME_REGION_BOUNDARY_WIDTH/2,
-			   y - VIA_THEME_REGION_BOUNDARY_WIDTH/2,
-			   w + VIA_THEME_REGION_BOUNDARY_WIDTH,
-			   h + VIA_THEME_REGION_BOUNDARY_WIDTH);
-	    _via_ctx.stroke();
+        if ( w > VIA_THEME_REGION_BOUNDARY_WIDTH &&
+             h > VIA_THEME_REGION_BOUNDARY_WIDTH ) {
+            // draw a boundary line on both sides of the fill line
+            _via_ctx.strokeStyle = VIA_THEME_BOUNDARY_LINE_COLOR;
+            _via_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/4;
+            _via_draw_rect(x - VIA_THEME_REGION_BOUNDARY_WIDTH/2,
+                           y - VIA_THEME_REGION_BOUNDARY_WIDTH/2,
+                           w + VIA_THEME_REGION_BOUNDARY_WIDTH,
+                           h + VIA_THEME_REGION_BOUNDARY_WIDTH);
+            _via_ctx.stroke();
 
-	    _via_draw_rect(x + VIA_THEME_REGION_BOUNDARY_WIDTH/2,
-			   y + VIA_THEME_REGION_BOUNDARY_WIDTH/2,
-			   w - VIA_THEME_REGION_BOUNDARY_WIDTH,
-			   h - VIA_THEME_REGION_BOUNDARY_WIDTH);
-	    _via_ctx.stroke();
-	}
+            _via_draw_rect(x + VIA_THEME_REGION_BOUNDARY_WIDTH/2,
+                           y + VIA_THEME_REGION_BOUNDARY_WIDTH/2,
+                           w - VIA_THEME_REGION_BOUNDARY_WIDTH,
+                           h - VIA_THEME_REGION_BOUNDARY_WIDTH);
+            _via_ctx.stroke();
+        }
     }
 }
 
@@ -1407,45 +1394,45 @@ function _via_draw_rect(x, y, w, h) {
 function draw_all_region_id() { 
     _via_ctx.shadowColor = "transparent";
     for (var i=0; i < _via_images[_via_image_id].regions.length; ++i) {
-	var rattr = _via_images[_via_image_id].regions[i].region_attributes;
-	var annotation_str = '?';
-	if (rattr.has(VIA_FACE_LABEL_ATTR_NAME)) {
-	    annotation_str = rattr.get(VIA_FACE_LABEL_ATTR_NAME);
-	}
+        var rattr = _via_images[_via_image_id].regions[i].region_attributes;
+        var annotation_str = '?';
+        if (rattr.has(VIA_FACE_LABEL_ATTR_NAME)) {
+            annotation_str = rattr.get(VIA_FACE_LABEL_ATTR_NAME);
+        }
 
-	var bbox = get_canvas_region_bounding_box(i);
+        var bbox = get_canvas_region_bounding_box(i);
 
-	var x = bbox[0];
-	var y = bbox[1];
-	var w = Math.abs(bbox[2] - bbox[0]);
-	var h = Math.abs(bbox[3] - bbox[1]);
-	_via_ctx.font = '8pt Sans';
+        var x = bbox[0];
+        var y = bbox[1];
+        var w = Math.abs(bbox[2] - bbox[0]);
+        var h = Math.abs(bbox[3] - bbox[1]);
+        _via_ctx.font = '8pt Sans';
 
-	var bgnd_rect_height = 1.8 * _via_ctx.measureText('M').width;
-	var bgnd_rect_width = _via_ctx.measureText(annotation_str).width;
+        var bgnd_rect_height = 1.8 * _via_ctx.measureText('M').width;
+        var bgnd_rect_width = _via_ctx.measureText(annotation_str).width;
 
-	if ( bgnd_rect_width > w ) {
-	    var max_str_len = Math.round(annotation_str.length * (w/bgnd_rect_width)) - 2;
-	    annotation_str = annotation_str.substring(0, max_str_len) + '.';
-	    bgnd_rect_width = w;
-	} else {
-	    bgnd_rect_width = bgnd_rect_width + 0.6*bgnd_rect_height;
-	}
+        if ( bgnd_rect_width > w ) {
+            var max_str_len = Math.round(annotation_str.length * (w/bgnd_rect_width)) - 2;
+            annotation_str = annotation_str.substring(0, max_str_len) + '.';
+            bgnd_rect_width = w;
+        } else {
+            bgnd_rect_width = bgnd_rect_width + 0.6*bgnd_rect_height;
+        }
 
-	// first, draw a background rectangle first
-	_via_ctx.fillStyle = 'black';
-	_via_ctx.globalAlpha=0.8;
-	_via_ctx.fillRect(x,
-			  y - bgnd_rect_height,
-			  bgnd_rect_width,
-			  bgnd_rect_height);
-	
-	// then, draw text over this background rectangle
-	_via_ctx.globalAlpha=1.0;
-	_via_ctx.fillStyle = 'yellow';
-	_via_ctx.fillText(annotation_str,
-			  x+bgnd_rect_height/4,
-			  y - bgnd_rect_height/3);
+        // first, draw a background rectangle first
+        _via_ctx.fillStyle = 'black';
+        _via_ctx.globalAlpha=0.8;
+        _via_ctx.fillRect(x,
+                          y - bgnd_rect_height,
+                          bgnd_rect_width,
+                          bgnd_rect_height);
+        
+        // then, draw text over this background rectangle
+        _via_ctx.globalAlpha=1.0;
+        _via_ctx.fillStyle = 'yellow';
+        _via_ctx.fillText(annotation_str,
+                          x+bgnd_rect_height/4,
+                          y - bgnd_rect_height/3);
 
     }
 }
@@ -1465,18 +1452,18 @@ function get_canvas_region_bounding_box(region_id) {
 //
 function is_inside_region(px, py) {
     for (var i=0; i < _via_canvas_regions.length; ++i) {
-	var attr = _via_canvas_regions[i].shape_attributes;
-	var result = false;
-	
-	result = is_inside_rect(attr.get('x'),
-				attr.get('y'),
-				attr.get('width'),
-				attr.get('height'),
-				px, py);
+        var attr = _via_canvas_regions[i].shape_attributes;
+        var result = false;
+        
+        result = is_inside_rect(attr.get('x'),
+                                attr.get('y'),
+                                attr.get('width'),
+                                attr.get('height'),
+                                px, py);
 
-	if (result) {
-	    return i;
-	}
+        if (result) {
+            return i;
+        }
     }    
     return -1;
 }
@@ -1485,20 +1472,20 @@ function is_on_region_corner(px, py) {
     var _via_region_edge = [-1, -1]; // region_id, corner_id [top-left=1,top-right=2,bottom-right=3,bottom-left=4]
     
     for (var i=0; i < _via_canvas_regions.length; ++i) {
-	var attr = _via_canvas_regions[i].shape_attributes;
-	var result = false;
-	_via_region_edge[0] = i;
-	
-	result = is_on_rect_edge(attr.get('x'),
-				 attr.get('y'),
-				 attr.get('width'),
-				 attr.get('height'),
-				 px, py);
+        var attr = _via_canvas_regions[i].shape_attributes;
+        var result = false;
+        _via_region_edge[0] = i;
+        
+        result = is_on_rect_edge(attr.get('x'),
+                                 attr.get('y'),
+                                 attr.get('width'),
+                                 attr.get('height'),
+                                 px, py);
 
-	if (result > 0) {
-	    _via_region_edge[1] = result;
-	    return _via_region_edge;
-	}
+        if (result > 0) {
+            _via_region_edge[1] = result;
+            return _via_region_edge;
+        }
     }
     _via_region_edge[0] = -1;
     return _via_region_edge;
@@ -1512,21 +1499,21 @@ function is_on_rect_edge(x, y, w, h, px, py) {
 
     //[top-left=1,top-right=2,bottom-right=3,bottom-left=4]
     if ( dx0 < VIA_REGION_EDGE_TOL &&
-	 dy0 < VIA_REGION_EDGE_TOL ) {
-	return 1;
+         dy0 < VIA_REGION_EDGE_TOL ) {
+        return 1;
     }
     if ( dx1 < VIA_REGION_EDGE_TOL &&
-	 dy0 < VIA_REGION_EDGE_TOL ) {
-	return 2;
+         dy0 < VIA_REGION_EDGE_TOL ) {
+        return 2;
     }
     if ( dx1 < VIA_REGION_EDGE_TOL &&
-	 dy1 < VIA_REGION_EDGE_TOL ) {
-	return 3;
+         dy1 < VIA_REGION_EDGE_TOL ) {
+        return 3;
     }
 
     if ( dx0 < VIA_REGION_EDGE_TOL &&
-	 dy1 < VIA_REGION_EDGE_TOL ) {
-	return 4;
+         dy1 < VIA_REGION_EDGE_TOL ) {
+        return 4;
     }
     return 0;
 }
@@ -1544,11 +1531,11 @@ function is_inside_rect(x, y, w, h, px, py) {
 
 function update_ui_components() {
     if ( !_via_is_window_resized && _via_current_image_loaded ) {
-	show_message("Resizing window ...", VIA_THEME_MESSAGE_TIMEOUT_MS);
-	_via_is_window_resized = true;
-	show_image(_via_image_index);
+        show_message("Resizing window ...", VIA_THEME_MESSAGE_TIMEOUT_MS);
+        _via_is_window_resized = true;
+        show_image(_via_image_index);
 
-	reset_zoom_level();
+        reset_zoom_level();
     }
 }
 
@@ -1556,252 +1543,252 @@ function update_ui_components() {
 window.addEventListener("keydown", function(e) {
     // user commands
     if ( e.ctrlKey ) {
-	if ( e.key == 's' ) { // Ctrl + s
-	    download_all_region_data('csv');
-	    e.preventDefault();
-	    return;
-	}
+        if ( e.key == 's' ) { // Ctrl + s
+            download_all_region_data('csv');
+            e.preventDefault();
+            return;
+        }
 
-	if ( e.key == 'i' ) { // Ctrl + i
-	    upload_region_data_file();
-	    e.preventDefault();
-	    return;
-	}
+        if ( e.key == 'i' ) { // Ctrl + i
+            upload_region_data_file();
+            e.preventDefault();
+            return;
+        }
 
-	if ( e.key == 'o' ) { // Ctrl + o
-	    load_images('image');
-	    e.preventDefault();
-	    return;
-	}
+        if ( e.key == 'o' ) { // Ctrl + o
+            load_images('image');
+            e.preventDefault();
+            return;
+        }
 
-	if ( e.key == 'a' ) { // Ctrl + a
-	    toggle_all_regions_selection(true);
-	    _via_is_all_region_selected = true;
-	    _via_is_region_selected = false;
-	    _via_redraw_canvas();
-	    update_attributes_input_panel();
+        if ( e.key == 'a' ) { // Ctrl + a
+            toggle_all_regions_selection(true);
+            _via_is_all_region_selected = true;
+            _via_is_region_selected = false;
+            _via_redraw_canvas();
+            update_attributes_input_panel();
 
-	    e.preventDefault();
-	    return;
-	}
+            e.preventDefault();
+            return;
+        }
 
-	if ( e.key == 'c' ) { // Ctrl + c
-	    _via_copied_image_regions.splice(0);
-	    _via_copied_canvas_regions.splice(0);
-	    for (var i=0; i<_via_images[_via_image_id].regions.length; ++i) {
-		var img_region = _via_images[_via_image_id].regions[i];
-		var canvas_region = _via_canvas_regions[i];
-		if (canvas_region.is_user_selected) {
-		    _via_copied_image_regions.push( clone_image_region(img_region) );
-		    _via_copied_canvas_regions.push( clone_image_region(canvas_region) );
-		}
-	    }
-	    show_message('Copied ' + _via_copied_image_regions.length + ' selected regions. Press Ctrl + v to paste', VIA_THEME_MESSAGE_TIMEOUT_MS);
-	    e.preventDefault();
-	    return;
-	}
+        if ( e.key == 'c' ) { // Ctrl + c
+            _via_copied_image_regions.splice(0);
+            _via_copied_canvas_regions.splice(0);
+            for (var i=0; i<_via_images[_via_image_id].regions.length; ++i) {
+                var img_region = _via_images[_via_image_id].regions[i];
+                var canvas_region = _via_canvas_regions[i];
+                if (canvas_region.is_user_selected) {
+                    _via_copied_image_regions.push( clone_image_region(img_region) );
+                    _via_copied_canvas_regions.push( clone_image_region(canvas_region) );
+                }
+            }
+            show_message('Copied ' + _via_copied_image_regions.length + ' selected regions. Press Ctrl + v to paste', VIA_THEME_MESSAGE_TIMEOUT_MS);
+            e.preventDefault();
+            return;
+        }
 
-	if ( e.key == 'v' ) { // Ctrl + v
-	    for (var i=0; i<_via_copied_image_regions.length; ++i) {
-		_via_images[_via_image_id].regions.push( _via_copied_image_regions[i] );
-		_via_canvas_regions.push( _via_copied_canvas_regions[i] );
-	    }
-	    show_message('Pasted ' + _via_copied_image_regions.length + ' regions', VIA_THEME_MESSAGE_TIMEOUT_MS);
-	    e.preventDefault();
-	    _via_redraw_canvas();
-	    return;
-	}
+        if ( e.key == 'v' ) { // Ctrl + v
+            for (var i=0; i<_via_copied_image_regions.length; ++i) {
+                _via_images[_via_image_id].regions.push( _via_copied_image_regions[i] );
+                _via_canvas_regions.push( _via_copied_canvas_regions[i] );
+            }
+            show_message('Pasted ' + _via_copied_image_regions.length + ' regions', VIA_THEME_MESSAGE_TIMEOUT_MS);
+            e.preventDefault();
+            _via_redraw_canvas();
+            return;
+        }
 
-	if ( e.key == 'f' ) { // f
-	    load_images('face_label');
-	    e.preventDefault();
-	    return;
-	}
+        if ( e.key == 'f' ) { // f
+            load_images('face_label');
+            e.preventDefault();
+            return;
+        }
 
 
     }
 
     if ( (e.altKey || e.metaKey) ) {
-	if( e.key == 'd' ) { // Alt + d
-	    delete_selected_regions();
-	    update_attributes_input_panel();
-	    _via_reload_img_table = true;	
-	    show_img_list();
-	    _via_redraw_canvas();
-	    _via_canvas.focus();
-	    e.preventDefault();
-	    return;
-	}
+        if( e.key == 'd' ) { // Alt + d
+            delete_selected_regions();
+            update_attributes_input_panel();
+            _via_reload_img_table = true;       
+            show_img_list();
+            _via_redraw_canvas();
+            _via_canvas.focus();
+            e.preventDefault();
+            return;
+        }
     }
     
     // zoom in/out functionality
     if (e.key == '+') {
-	// zoom in
-	if (_via_canvas_zoom_level_index == (VIA_CANVAS_ZOOM_LEVELS.length-1)) {
-	    show_message('Further zoom-in not possible', VIA_THEME_MESSAGE_TIMEOUT_MS);
-	} else {
-	    _via_canvas_zoom_level_index += 1;
-	    
-	    _via_is_canvas_zoomed = true;
-	    var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
-	    _via_ctx.scale(zoom_scale, zoom_scale);
-	    
-	    _via_canvas.height = _via_canvas_height * zoom_scale;
-	    _via_canvas.width = _via_canvas_width * zoom_scale;
-	    _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
+        // zoom in
+        if (_via_canvas_zoom_level_index == (VIA_CANVAS_ZOOM_LEVELS.length-1)) {
+            show_message('Further zoom-in not possible', VIA_THEME_MESSAGE_TIMEOUT_MS);
+        } else {
+            _via_canvas_zoom_level_index += 1;
+            
+            _via_is_canvas_zoomed = true;
+            var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
+            _via_ctx.scale(zoom_scale, zoom_scale);
+            
+            _via_canvas.height = _via_canvas_height * zoom_scale;
+            _via_canvas.width = _via_canvas_width * zoom_scale;
+            _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
 
-	    _via_load_canvas_regions(); // image to canvas space transform
-	    _via_redraw_canvas();
-	    _via_canvas.focus();
-	    show_message('Zoomed in to level ' + zoom_scale, VIA_THEME_MESSAGE_TIMEOUT_MS);
-	}
-	return;         
+            _via_load_canvas_regions(); // image to canvas space transform
+            _via_redraw_canvas();
+            _via_canvas.focus();
+            show_message('Zoomed in to level ' + zoom_scale, VIA_THEME_MESSAGE_TIMEOUT_MS);
+        }
+        return;         
     }
 
     if (e.key == '-') {
-	// zoom out
-	if (_via_canvas_zoom_level_index == 0) {
-	    show_message('Further zoom-out not possible', VIA_THEME_MESSAGE_TIMEOUT_MS);
-	} else {
-	    _via_canvas_zoom_level_index -= 1;
-	    
-	    _via_is_canvas_zoomed = true;
-	    var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
-	    _via_ctx.scale(zoom_scale, zoom_scale);
-	    
-	    _via_canvas.height = _via_canvas_height * zoom_scale;
-	    _via_canvas.width = _via_canvas_width * zoom_scale;
-	    _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
+        // zoom out
+        if (_via_canvas_zoom_level_index == 0) {
+            show_message('Further zoom-out not possible', VIA_THEME_MESSAGE_TIMEOUT_MS);
+        } else {
+            _via_canvas_zoom_level_index -= 1;
+            
+            _via_is_canvas_zoomed = true;
+            var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
+            _via_ctx.scale(zoom_scale, zoom_scale);
+            
+            _via_canvas.height = _via_canvas_height * zoom_scale;
+            _via_canvas.width = _via_canvas_width * zoom_scale;
+            _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
 
-	    _via_load_canvas_regions(); // image to canvas space transform
-	    _via_redraw_canvas();
-	    _via_canvas.focus();
-	    show_message('Zoomed out to level ' + zoom_scale, VIA_THEME_MESSAGE_TIMEOUT_MS);
-	}
-	return;
+            _via_load_canvas_regions(); // image to canvas space transform
+            _via_redraw_canvas();
+            _via_canvas.focus();
+            show_message('Zoomed out to level ' + zoom_scale, VIA_THEME_MESSAGE_TIMEOUT_MS);
+        }
+        return;
     }
     if ( e.key == '0' ) { // 0
-	// reset the zoom level
-	reset_zoom_level();
-	show_message('Zoom reset', VIA_THEME_MESSAGE_TIMEOUT_MS);
-	return;
+        // reset the zoom level
+        reset_zoom_level();
+        show_message('Zoom reset', VIA_THEME_MESSAGE_TIMEOUT_MS);
+        return;
     }
 
     if ( e.which == 112 ) { // F1
-	show_getting_started_panel();
-	e.preventDefault();
-	return;
+        show_getting_started_panel();
+        e.preventDefault();
+        return;
     }
     
     if (e.which == 78 || e.which == 39) { // n or right arrow
-	move_to_next_image();
-	e.preventDefault();
-	return;
+        move_to_next_image();
+        e.preventDefault();
+        return;
     }
     if (e.which == 80 || e.which == 37) { // n or right arrow
-	move_to_prev_image();
-	e.preventDefault();
-	return;
+        move_to_prev_image();
+        e.preventDefault();
+        return;
     }
 
     if (e.key == 'a') { // a
-	toggle_attributes_input_panel();
-	return;
+        toggle_attributes_input_panel();
+        return;
     }
     
     if ( e.key == 'l' ) { // l
-	toggle_img_list();
-	e.preventDefault();
-	return;
+        toggle_img_list();
+        e.preventDefault();
+        return;
     }
 
     if ( e.which == 27 ) { // Esc
-	if ( _via_is_user_resizing_region ) {
-	    // cancel region resizing action
-	    _via_is_user_resizing_region = false;
-	}
-	
-	if ( _via_is_region_selected ) {
-	    // clear all region selections
-	    _via_is_region_selected = false;
-	    _via_canvas_regions[_via_user_sel_region_id].is_user_selected = false;
-	    _via_user_sel_region_id = -1;
-	}
+        if ( _via_is_user_resizing_region ) {
+            // cancel region resizing action
+            _via_is_user_resizing_region = false;
+        }
+        
+        if ( _via_is_region_selected ) {
+            // clear all region selections
+            _via_is_region_selected = false;
+            _via_canvas_regions[_via_user_sel_region_id].is_user_selected = false;
+            _via_user_sel_region_id = -1;
+        }
 
-	if (_via_is_all_region_selected) {
-	    toggle_all_regions_selection(false);
-	}
+        if (_via_is_all_region_selected) {
+            toggle_all_regions_selection(false);
+        }
 
-	if ( _via_is_user_drawing_polygon ) {
-	    _via_is_user_drawing_polygon = false;
-	    _via_canvas_regions.splice(_via_current_polygon_region_id, 1);
-	}
+        if ( _via_is_user_drawing_polygon ) {
+            _via_is_user_drawing_polygon = false;
+            _via_canvas_regions.splice(_via_current_polygon_region_id, 1);
+        }
 
-	if ( _via_is_user_drawing_region ) {
-	    _via_is_user_drawing_region = false;
-	}
+        if ( _via_is_user_drawing_region ) {
+            _via_is_user_drawing_region = false;
+        }
 
-	if ( _via_is_user_resizing_region ) {
-	    _via_is_user_resizing_region = false
-	}
+        if ( _via_is_user_resizing_region ) {
+            _via_is_user_resizing_region = false
+        }
 
-	if ( _via_is_user_moving_region ) {
-	    _via_is_user_moving_region = false
-	}
-	
-	e.preventDefault();
-	_via_redraw_canvas();
-	_via_canvas.focus();
-	return;
+        if ( _via_is_user_moving_region ) {
+            _via_is_user_moving_region = false
+        }
+        
+        e.preventDefault();
+        _via_redraw_canvas();
+        _via_canvas.focus();
+        return;
     }
 
     if ( e.which == 121 ) { // F10 key used for debugging
-	print_current_state_vars();
-	print_current_image_data();
-	e.preventDefault();
-	return;
+        print_current_state_vars();
+        print_current_image_data();
+        e.preventDefault();
+        return;
     }
     if (e.which == 113) { // F2 for about
-	show_about_panel();
-	e.preventDefault();
-	return;
+        show_about_panel();
+        e.preventDefault();
+        return;
     }
     
 });
 
 function move_to_prev_image() {
     if (_via_images_count > 0) {
-	_via_is_region_selected = false;
-	_via_user_sel_region_id = -1;
-	_via_is_user_resizing_region = false;
-	_via_is_user_moving_region = false;
-	_via_is_all_region_selected = false;
-	_via_is_canvas_zoomed = false;
-	_via_canvas.style.cursor = "default";
-	
-	if ( _via_image_index == 0 ) {   
-	    show_image(_via_images_count - 1);
-	} else {
-	    show_image(_via_image_index - 1);
-	}
+        _via_is_region_selected = false;
+        _via_user_sel_region_id = -1;
+        _via_is_user_resizing_region = false;
+        _via_is_user_moving_region = false;
+        _via_is_all_region_selected = false;
+        _via_is_canvas_zoomed = false;
+        _via_canvas.style.cursor = "default";
+        
+        if ( _via_image_index == 0 ) {   
+            show_image(_via_images_count - 1);
+        } else {
+            show_image(_via_image_index - 1);
+        }
     }    
 }
 
 function move_to_next_image() {
     if (_via_images_count > 0) {
-	_via_is_region_selected = false;
-	_via_user_sel_region_id = -1;
-	_via_is_user_resizing_region = false;
-	_via_is_user_moving_region = false;
-	_via_is_all_region_selected = false;
-	_via_is_canvas_zoomed = false;
-	_via_canvas.style.cursor = "default";
-	
-	if ( _via_image_index == (_via_images_count-1) ) {   
-	    show_image(0);
-	} else {
-	    show_image(_via_image_index + 1);
-	}
+        _via_is_region_selected = false;
+        _via_user_sel_region_id = -1;
+        _via_is_user_resizing_region = false;
+        _via_is_user_moving_region = false;
+        _via_is_all_region_selected = false;
+        _via_is_canvas_zoomed = false;
+        _via_canvas.style.cursor = "default";
+        
+        if ( _via_image_index == (_via_images_count-1) ) {   
+            show_image(0);
+        } else {
+            show_image(_via_image_index + 1);
+        }
     }
 }
 
@@ -1826,15 +1813,15 @@ function reset_zoom_level() {
 //
 function show_message(msg, timeout_ms) {
     if ( _via_message_clear_timer ) {
-	clearTimeout(_via_message_clear_timer); // stop any previous timeouts
+        clearTimeout(_via_message_clear_timer); // stop any previous timeouts
     }
     
     document.getElementById('message_panel').innerHTML = msg;
 
     if ( timeout_ms != undefined ) {
-	_via_message_clear_timer = setTimeout( function() {
-	    document.getElementById('message_panel').innerHTML = ' ';
-	}, timeout_ms);
+        _via_message_clear_timer = setTimeout( function() {
+            document.getElementById('message_panel').innerHTML = ' ';
+        }, timeout_ms);
     }
     return;    
 }
@@ -1843,12 +1830,12 @@ function toggle_message_panel() {
     switch(message_panel.style.display) {
     default:
     case 'block':
-	message_panel.style.display = 'none';
-	break;
-	
+        message_panel.style.display = 'none';
+        break;
+        
     case 'none':
-	message_panel.style.display = 'block';
-	break;
+        message_panel.style.display = 'block';
+        break;
     }
 }
 
@@ -1860,35 +1847,35 @@ function show_all_info() {
 
 function show_region_attributes_info() {
     if ( _via_user_sel_region_id != -1 ) {
-	var region_set_attr_count = _via_images[_via_image_id].regions[_via_user_sel_region_id].region_attributes.size;
-	var region_attr_count = _via_region_attributes.size;
+        var region_set_attr_count = _via_images[_via_image_id].regions[_via_user_sel_region_id].region_attributes.size;
+        var region_attr_count = _via_region_attributes.size;
 
-	var missing_attr_count = region_attr_count - region_set_attr_count;
-	if (missing_attr_count) {
-	    document.getElementById("info_attribute").innerHTML = region_set_attr_count + ' ( ' + (region_attr_count - region_set_attr_count) + ' remaining )';
-	} else {
-	    document.getElementById("info_attribute").innerHTML = region_set_attr_count;
-	}
+        var missing_attr_count = region_attr_count - region_set_attr_count;
+        if (missing_attr_count) {
+            document.getElementById("info_attribute").innerHTML = region_set_attr_count + ' ( ' + (region_attr_count - region_set_attr_count) + ' remaining )';
+        } else {
+            document.getElementById("info_attribute").innerHTML = region_set_attr_count;
+        }
     } else {
-	document.getElementById("info_attribute").innerHTML = "";
+        document.getElementById("info_attribute").innerHTML = "";
     }
 }
 
 function show_region_shape_info() {
     if ( _via_current_image_loaded ) {
-	document.getElementById("info_region").innerHTML = _via_images[_via_image_id].regions.length;
+        document.getElementById("info_region").innerHTML = _via_images[_via_image_id].regions.length;
     } else {
-	document.getElementById("info_region").innerHTML = "";
+        document.getElementById("info_region").innerHTML = "";
     }
 }
 
 function show_filename_info() {
     if ( _via_current_image_loaded ) {
-	document.getElementById("info_current_filename").innerHTML = _via_current_image_filename;
-	document.getElementById("info_current_fileid").innerHTML = "(" + (_via_image_index+1) + " of " + _via_images_count + ")";
+        document.getElementById("info_current_filename").innerHTML = _via_current_image_filename;
+        document.getElementById("info_current_fileid").innerHTML = "(" + (_via_image_index+1) + " of " + _via_images_count + ")";
     } else {
-	document.getElementById("info_current_filename").innerHTML = "";
-	document.getElementById("info_current_fileid").innerHTML = "";
+        document.getElementById("info_current_filename").innerHTML = "";
+        document.getElementById("info_current_fileid").innerHTML = "";
     }
 }
 
@@ -1899,49 +1886,49 @@ function show_filename_info() {
 function check_local_storage() {
     // https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API/Using_the_Web_Storage_API
     try {
-	var x = '__storage_test__';
-	localStorage.setItem(x, x);
-	localStorage.removeItem(x);
-	return true;
+        var x = '__storage_test__';
+        localStorage.setItem(x, x);
+        localStorage.removeItem(x);
+        return true;
     }
     catch(e) {
-	return false;
+        return false;
     }
 }
 
 function save_current_data_to_browser_cache() {
     setTimeout(function() {
-	if ( _via_is_local_storage_available &&
-	     ! _via_is_save_ongoing) {
-	    try {
-		_via_is_save_ongoing = true;
-		localStorage.setItem('_via_timestamp', Date.now());
-		localStorage.setItem('_via_images', package_region_data('json'));
+        if ( _via_is_local_storage_available &&
+             ! _via_is_save_ongoing) {
+            try {
+                _via_is_save_ongoing = true;
+                localStorage.setItem('_via_timestamp', Date.now());
+                localStorage.setItem('_via_images', package_region_data('json'));
 
-		// save attributes
-		var attr = [];
-		for (var attribute of _via_region_attributes) {
-		    attr.push(attribute);
-		}
-		localStorage.setItem('_via_region_attributes', JSON.stringify(attr));
-		_via_is_save_ongoing = false;
-	    } catch(err) {
-		_via_is_save_ongoing = false;
-		_via_is_local_storage_available = false;
-		show_message('Failed to save data to browser cache. Please download the annotation data.');
-		alert('Failed to save data to browser cache. Please download the annotation data.');
-		console.log('Failed to save data to browser cache');
-		console.log(err.message);
-	    }
-	}
+                // save attributes
+                var attr = [];
+                for (var attribute of _via_region_attributes) {
+                    attr.push(attribute);
+                }
+                localStorage.setItem('_via_region_attributes', JSON.stringify(attr));
+                _via_is_save_ongoing = false;
+            } catch(err) {
+                _via_is_save_ongoing = false;
+                _via_is_local_storage_available = false;
+                show_message('Failed to save data to browser cache. Please download the annotation data.');
+                alert('Failed to save data to browser cache. Please download the annotation data.');
+                console.log('Failed to save data to browser cache');
+                console.log(err.message);
+            }
+        }
     }, 1000);
 }
 
 function is_via_data_in_localStorage() {
     if (localStorage.getItem('_via_timestamp')) {
-	return true;
+        return true;
     } else {
-	return false;
+        return false;
     }
 }
 
@@ -1972,59 +1959,59 @@ function show_localStorage_recovery_options() {
 function download_localStorage_data(type) {
     switch(type) {
     case 'csv':
-	var d = JSON.parse( localStorage.getItem('_via_images') );
+        var d = JSON.parse( localStorage.getItem('_via_images') );
 
-	var csvdata = [];
-	var csvheader = "#filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes";
-	csvdata.push(csvheader);
+        var csvdata = [];
+        var csvheader = "#filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes";
+        csvdata.push(csvheader);
 
-	for (var image_id in d) {
-	    // copy file attributes
-	    var file_attr_map = new Map();
-	    for (var key in d[image_id].file_attributes) {
-		file_attr_map.set(key, d[image_id].file_attributes[key]);
-	    }
+        for (var image_id in d) {
+            // copy file attributes
+            var file_attr_map = new Map();
+            for (var key in d[image_id].file_attributes) {
+                file_attr_map.set(key, d[image_id].file_attributes[key]);
+            }
 
-	    var prefix_str = d[image_id].filename;
-	    prefix_str += "," + d[image_id].size;
-	    prefix_str += "," + attr_map_to_str( file_attr_map );
+            var prefix_str = d[image_id].filename;
+            prefix_str += "," + d[image_id].size;
+            prefix_str += "," + attr_map_to_str( file_attr_map );
 
-	    // copy regions
-	    var regions = d[image_id].regions;
-	    var region_count = 0;
-	    for (var i in regions) {
-		region_count += 1;
-	    }
-	    
-	    for (var i in regions) {
-		var region_shape_attr_str = region_count + ',' + i + ',';
-		
-		var regioni = new ImageRegion();
-		for (var key in regions[i].shape_attributes) {
-		    regioni.shape_attributes.set(key, regions[i].shape_attributes[key]);
-		}
-		for (var key in regions[i].region_attributes) {
-		    regioni.region_attributes.set(key, regions[i].region_attributes[key]);
-		}
-		region_shape_attr_str += attr_map_to_str( regioni.shape_attributes );
-		var region_attr_str = attr_map_to_str( regioni.region_attributes );
-		console.log('\n' + prefix_str + ',' + region_shape_attr_str + ',' + region_attr_str);
-		csvdata.push('\n' + prefix_str + ',' + region_shape_attr_str + ',' + region_attr_str);
-	    }
-	}
+            // copy regions
+            var regions = d[image_id].regions;
+            var region_count = 0;
+            for (var i in regions) {
+                region_count += 1;
+            }
+            
+            for (var i in regions) {
+                var region_shape_attr_str = region_count + ',' + i + ',';
+                
+                var regioni = new ImageRegion();
+                for (var key in regions[i].shape_attributes) {
+                    regioni.shape_attributes.set(key, regions[i].shape_attributes[key]);
+                }
+                for (var key in regions[i].region_attributes) {
+                    regioni.region_attributes.set(key, regions[i].region_attributes[key]);
+                }
+                region_shape_attr_str += attr_map_to_str( regioni.shape_attributes );
+                var region_attr_str = attr_map_to_str( regioni.region_attributes );
+                console.log('\n' + prefix_str + ',' + region_shape_attr_str + ',' + region_attr_str);
+                csvdata.push('\n' + prefix_str + ',' + region_shape_attr_str + ',' + region_attr_str);
+            }
+        }
 
-	var localStorage_data_blob = new Blob( csvdata,
-					       {type: 'text/csv;charset=utf-8'});
+        var localStorage_data_blob = new Blob( csvdata,
+                                               {type: 'text/csv;charset=utf-8'});
 
-	save_data_to_local_file(localStorage_data_blob, 'via_region_data.csv');
+        save_data_to_local_file(localStorage_data_blob, 'via_region_data.csv');
 
-	break;
+        break;
     case 'json':
-	var localStorage_data_blob = new Blob( [localStorage.getItem('_via_images')],
-					       {type: 'text/json;charset=utf-8'});
+        var localStorage_data_blob = new Blob( [localStorage.getItem('_via_images')],
+                                               {type: 'text/json;charset=utf-8'});
 
-	save_data_to_local_file(localStorage_data_blob, 'via_region_data.json');
-	break;
+        save_data_to_local_file(localStorage_data_blob, 'via_region_data.json');
+        break;
     }
     
 }
@@ -2035,83 +2022,83 @@ function download_localStorage_data(type) {
 
 function toggle_attributes_input_panel() {
     if (_via_is_attributes_input_panel_visible) {
-	attributes_input_panel.style.display = 'none';
-	_via_is_attributes_input_panel_visible = false;
+        attributes_input_panel.style.display = 'none';
+        _via_is_attributes_input_panel_visible = false;
     } else {
-	_via_is_attributes_input_panel_visible = true;
-	update_attributes_input_panel();        
-	attributes_input_panel.style.display = 'block';
+        _via_is_attributes_input_panel_visible = true;
+        update_attributes_input_panel();        
+        attributes_input_panel.style.display = 'block';
     }
 }
 
 function update_attributes_input_panel() {
     if (_via_face_label_list.length == 0) {
-	var msg = '<div style="margin: auto; text-align: center; width: 40%;padding: 2em 0;">Import a list of representative face images using [<a href="" onclick="">Face Labels &rarr; Import from Images</a>]. Representative images correspond to facial image of individuals that you wish to locate and  annotate in several images.</div>';
-	face_label_panel.innerHTML = msg;
-	return;
+        var msg = '<div style="margin: auto; text-align: center; width: 40%;padding: 2em 0;">Import a list of representative face images using [<a href="" onclick="">Face Labels &rarr; Import from Images</a>]. Representative images correspond to facial image of individuals that you wish to locate and  annotate in several images.</div>';
+        face_label_panel.innerHTML = msg;
+        return;
     }
     
     if (_via_is_attributes_input_panel_visible) {
-	var face_label_html = [];
-	var selregion_id = -1;
-	if ( _via_current_image_loaded &&
-	     _via_is_region_selected) {
-	    var selregion = _via_images[_via_image_id].regions[_via_user_sel_region_id].region_attributes;
-	    if (selregion.has(VIA_FACE_LABEL_ATTR_NAME)) {
-		var selregion_label = selregion.get(VIA_FACE_LABEL_ATTR_NAME);
-		selregion_id = _via_face_label_list.indexOf(selregion_label);
-	    }
-	}    
-	
-	for (var i=0; i<_via_face_label_list.length; ++i) {
-	    if ( typeof(_via_face_label_list[i]) !== 'undefined') {
-		if ( selregion_id == i) {
-		    face_label_html.push('<div class="active_face_label selected">');
-		} else {
-		    if (_via_is_region_selected) {
-			face_label_html.push('<div class="active_face_label">');
-		    } else {
-			face_label_html.push('<div class="face_label">');
-		    }
-		}
-		face_label_html.push('<img title="' + _via_face_label_list[i] + '"');
-		face_label_html.push(' src="' + _via_face_label_img_list[i] + '"');
-		face_label_html.push(' height="160px"');
-		if (_via_is_region_selected) {
-		    face_label_html.push(' onclick="set_face_label(\'' + _via_face_label_list[i] + '\')"');
-		}
-		face_label_html.push(' alt="' + _via_face_label_list[i] + '" />');
-		//face_label_html.push('<br/>' + _via_face_label_list[i].split(' ').join('<br/>'));
-		face_label_html.push('<br/>' + _via_face_label_list[i]);
-		face_label_html.push('</div>');
-	    }
-	}
-	face_label_panel.innerHTML = face_label_html.join('');
+        var face_label_html = [];
+        var selregion_id = -1;
+        if ( _via_current_image_loaded &&
+             _via_is_region_selected) {
+            var selregion = _via_images[_via_image_id].regions[_via_user_sel_region_id].region_attributes;
+            if (selregion.has(VIA_FACE_LABEL_ATTR_NAME)) {
+                var selregion_label = selregion.get(VIA_FACE_LABEL_ATTR_NAME);
+                selregion_id = _via_face_label_list.indexOf(selregion_label);
+            }
+        }    
+        
+        for (var i=0; i<_via_face_label_list.length; ++i) {
+            if ( typeof(_via_face_label_list[i]) !== 'undefined') {
+                if ( selregion_id == i) {
+                    face_label_html.push('<div class="active_face_label selected">');
+                } else {
+                    if (_via_is_region_selected) {
+                        face_label_html.push('<div class="active_face_label">');
+                    } else {
+                        face_label_html.push('<div class="face_label">');
+                    }
+                }
+                face_label_html.push('<img title="' + _via_face_label_list[i] + '"');
+                face_label_html.push(' src="' + _via_face_label_img_list[i] + '"');
+                face_label_html.push(' height="160px"');
+                if (_via_is_region_selected) {
+                    face_label_html.push(' onclick="set_face_label(\'' + _via_face_label_list[i] + '\')"');
+                }
+                face_label_html.push(' alt="' + _via_face_label_list[i] + '" />');
+                //face_label_html.push('<br/>' + _via_face_label_list[i].split(' ').join('<br/>'));
+                face_label_html.push('<br/>' + _via_face_label_list[i]);
+                face_label_html.push('</div>');
+            }
+        }
+        face_label_panel.innerHTML = face_label_html.join('');
     }
 }
 
 function set_face_label(value) {
     if (_via_is_region_selected) {
-	var selregion = _via_images[_via_image_id].regions[_via_user_sel_region_id];
-	selregion.region_attributes.set(VIA_FACE_LABEL_ATTR_NAME, value);
+        var selregion = _via_images[_via_image_id].regions[_via_user_sel_region_id];
+        selregion.region_attributes.set(VIA_FACE_LABEL_ATTR_NAME, value);
 
-	// find out if any other region attribute is missing
-	for (var i=0; i<_via_canvas_regions.length; ++i) {
-	    var r = _via_images[_via_image_id].regions[i];
-	    if (r.region_attributes.get(VIA_FACE_LABEL_ATTR_NAME) == 'undefined' ||
-		typeof(r.region_attributes.get(VIA_FACE_LABEL_ATTR_NAME)) == 'undefined') {
-		_via_canvas_regions[_via_user_sel_region_id].is_user_selected = false;
-		_via_user_sel_region_id = i;
-		_via_canvas_regions[i].is_user_selected = true;
-		break;
-	    }
-	}
-		
-	update_attributes_input_panel();
-	_via_reload_img_table = true;	
-	show_img_list();
-	_via_redraw_canvas();
-	_via_canvas.focus();
+        // find out if any other region attribute is missing
+        for (var i=0; i<_via_canvas_regions.length; ++i) {
+            var r = _via_images[_via_image_id].regions[i];
+            if (r.region_attributes.get(VIA_FACE_LABEL_ATTR_NAME) == 'undefined' ||
+                typeof(r.region_attributes.get(VIA_FACE_LABEL_ATTR_NAME)) == 'undefined') {
+                _via_canvas_regions[_via_user_sel_region_id].is_user_selected = false;
+                _via_user_sel_region_id = i;
+                _via_canvas_regions[i].is_user_selected = true;
+                break;
+            }
+        }
+                
+        update_attributes_input_panel();
+        _via_reload_img_table = true;   
+        show_img_list();
+        _via_redraw_canvas();
+        _via_canvas.focus();
     }
 }
 
