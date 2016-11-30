@@ -121,9 +121,6 @@ var _via_loaded_img_table_html = [];
 // UI html elements
 var invisible_file_input = document.getElementById("invisible_file_input");
 
-var about_panel = document.getElementById("about_panel");
-var via_start_info_panel = document.getElementById("via_start_info_panel");
-var message_panel = document.getElementById("message_panel");
 var image_panel = document.getElementById("image_panel");
 var navbar_panel = document.getElementById("navbar");
 var info_panel = document.getElementById("info_panel");
@@ -198,14 +195,11 @@ function main() {
 // Handlers for top navigation bar
 //
 function show_home_panel() {
+    clear_image_display_area();
     if (_via_current_image_loaded) {
         _via_canvas.style.display = "block";    
-        via_start_info_panel.style.display = "none";
-        about_panel.style.display = "none";
     } else {
-        via_start_info_panel.style.display = "block";
-        about_panel.style.display = "none";
-        _via_canvas.style.display = "none";
+        document.getElementById('start_info_panel').style.display = "block";
     }
 }
 
@@ -273,9 +267,12 @@ function show_settings_panel() {
     show_message("Not implemented yet!");
 }
 function show_about_panel() {
-    about_panel.style.display = "block";
-    _via_canvas.style.display = "none";
-    via_start_info_panel.style.display = "none";
+    clear_image_display_area();
+    document.getElementById('about_panel').style.display = "block";
+}
+function show_getting_started_panel() {
+    clear_image_display_area();
+    document.getElementById('getting_started_panel').style.display = "block";
 }
 
 //
@@ -772,8 +769,9 @@ function _via_load_canvas_regions() {
 
 function clear_image_display_area() {
     _via_canvas.style.display = "none";
-    about_panel.style.display = 'none';
-    via_start_info_panel.style.display = 'none';
+    document.getElementById('about_panel').style.display = 'none';
+    document.getElementById('start_info_panel').style.display = 'none';
+    document.getElementById('getting_started_panel').style.display = 'none';
 }
 
 function delete_selected_regions() {
@@ -1635,6 +1633,12 @@ window.addEventListener("keydown", function(e) {
 	}
     }
 
+    if ( e.which == 112 ) { // f
+	show_getting_started_panel();
+	e.preventDefault();
+	return;
+    }
+    
     if ( e.which == 70 ) { // f
 	load_images('face_label');
 	e.preventDefault();
@@ -1824,11 +1828,11 @@ function show_message(msg, timeout_ms) {
 	clearTimeout(_via_message_clear_timer); // stop any previous timeouts
     }
     
-    message_panel.innerHTML = msg;
+    document.getElementById('message_panel').innerHTML = msg;
 
     if ( timeout_ms != undefined ) {
 	_via_message_clear_timer = setTimeout( function() {
-	    message_panel.innerHTML = ' ';
+	    document.getElementById('message_panel').innerHTML = ' ';
 	}, timeout_ms);
     }
     */
@@ -1961,7 +1965,7 @@ function show_localStorage_recovery_options() {
     hstr.push('</li></ul>');
     
     hstr.push('<p><b>If you continue, the cached data will be discarded!</b></p></div>');
-    via_start_info_panel.innerHTML += hstr.join('');
+    document.getElementById('localStorage_recovery_msg').innerHTML = hstr.join('');
 }
 
 function download_localStorage_data(type) {
@@ -2040,6 +2044,12 @@ function toggle_attributes_input_panel() {
 }
 
 function update_attributes_input_panel() {
+    if (_via_face_label_list.length == 0) {
+	var msg = '<div style="margin: auto; text-align: center; width: 40%;padding: 2em 0;">Import a list of representative face images using [<a href="" onclick="">Face Labels &rarr; Import from Images</a>]. Representative images correspond to facial image of individuals that you wish to locate and  annotate in several images.</div>';
+	face_label_panel.innerHTML = msg;
+	return;
+    }
+    
     if (_via_is_attributes_input_panel_visible) {
 	var face_label_html = [];
 	var selregion_id = -1;

@@ -30,9 +30,9 @@
         POSSIBILITY OF SUCH DAMAGE.
 
       -->
-    <title>VGG Image Annotator (VIA)</title>
+    <title>VGG Face Annotator</title>
     <meta name="author" content="Abhishek Dutta">
-    <meta name="description" content="VIA is a standalone image annotator application packaged as a single HTML file (< 200 KB) that runs on most modern web browsers.">
+    <meta name="description" content="VGG Face Annotator lets you mark and tag rectangular facial regions in an image. It is a fork of VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via/) adapted for face annotation.">
 
     <!-- Google analytics : used in Seebibyte project to measure impact
     <script>
@@ -224,19 +224,6 @@
       display: inline-block;
       margin: auto;
       }
-      #about_panel {
-      display: none;
-      margin: auto;
-      width: 80%;
-      font-family: Sans;
-      font-size: 1em;
-      line-height: 1.5em;
-      margin: 0;
-      }
-      #about_panel li {
-      margin: 1em 0;
-      }
-      
       .action_text_link {
       background-color: #aaeeff;
       color: #000000;
@@ -468,6 +455,7 @@
 
           <li class="dropdown"><a onclick="show_about_panel()" title="Help">Help &#9662</a>
             <div class="dropdown-content">
+	      <a onclick="show_getting_started_panel()" title="Getting started guide">Getting started</a>
               <a onclick="show_about_panel()" title="About VGG Image Annotator (VIA)">About VIA</a>
             </div>
           </li>
@@ -488,8 +476,8 @@
         <div class="box sidebar" id="info_panel">
 
           <!-- Show Region and File attributes panel -->
-          <div class="title">Face Region Attributes</div>
-          <span class="action_text_link" onclick="toggle_attributes_input_panel()" title="Show/Hide attributes">[click to show/hide attributes]</span>
+          <div class="title">Face Labels</div>
+          <span class="action_text_link" onclick="toggle_attributes_input_panel()" title="Show/Hide attributes">[click to show/hide labels]</span>
           
           <div class="title">Keyboard Shortcuts</div>
           <div class="info">
@@ -542,6 +530,10 @@
                 <td style="width: 6em;">Alt + d</td>
                 <td>Delete image region</td>
               </tr>           
+              <tr>
+                <td style="width: 6em;">F1</td>
+                <td>Help getting started</td>
+              </tr>           
             </table>
           </div>
         </div>
@@ -549,7 +541,7 @@
         <div class="box" id="image_panel">
           <canvas id="image_canvas">Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.</canvas>
 
-          <div id="via_start_info_panel" style="width: 40em;">
+          <div id="start_info_panel" style="width: 40em;">
 	    <p>Quick start guide for face annotator:</p>
 	    <p>
 	      <ol>
@@ -557,28 +549,37 @@
 		<li><span style="cursor: pointer" title="Load images"onclick="load_images('image')">[Load the images]</span> that you wish to annotate, draw rectangular regions by clicking and dragging the mouse cursor and select a face from the list of representative faces.</li>
 	      </ol>
 	    </p>
+	    <div id="localStorage_recovery_msg"></div>
           </div>
 
+          <div id="getting_started_panel" style="width: 40em;">
+	    <p>VGG Face Annotator lets you mark and tag rectangular facial regions in an image.</p>
+	    <h3>Getting started</h3>
+	    <ol>
+	      <li>Import a list of representative face images using [<a href="" onclick="">Face Labels &rarr; Import from Images</a>]. Representative images correspond to facial image of individuals that you wish to locate and  annotate in several images.</li>
+	      <li>Now [<a href="" onclick="load_images('image')">load the images</a>] that you wish to tag with rectangular facial regions.</li>
+	      <li>Press the key <b>n</b> (or <b>p</b>) to move to next (or previous image) and <b>l</b> to show the list of all images.</li>
+	      <li>Click mouse right button and drag to draw a rectangular region around a face in the loaded image. This newly created region is automatically selected.</li>
+	      <li>Press <b>a</b> key to show the face labels panel (if it is hidden). Click on one of the representative images to tag this region.</li>
+	      <li>Clicking on a region selects it allowing you to move, resize or delete them as needed.</li>
+	      <li>Remember to regularly save your work by clicking [Annotation &rarr; Save as CSV].</li>
+	      <li>Next time, to start from where you left, click [Annotation &rarr; Import] and point it to the CSV file saved in Step 7.</li>
+	    </ol>
+	  </div>
+	  
           <div id="img_list_panel"></div>
 
-          <div class="" id="about_panel" style="">
-            <p>
-              VGG Image Annotator (via) is an <a href="https://gitlab.com/vgg/via/">open source project</a> 
-              developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> 
-              and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.
-              With this standalone application, you can define regions in an image and create a textual description of those regions.
-              Such image regions and descriptions are useful for supervised training of learning algorithms.
-            </p>
+          <div class="" id="about_panel" style="width: 40em;">
+            <p>VGG Face Annotator (VFA) lets you mark and tag rectangular facial regions in an image. Such tagged image regions are useful for supervised training of learning algorithms.</p>
+	    <p>VFA is a fork of <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">VGG Image Annotator (VIA)</a> adapted for face annotation. VIA is an <a href="https://gitlab.com/vgg/via/">open source project</a> developed and maintained at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.</p>
             <p>
               Features:
             <ul>
               <li>based solely on HTML, CSS and Javascript (no dependecies on any javascript libraries)</li>
               <li>can be used offline (complete application packaged in a single html file of size &lt; 200KB)</li>
               <li>requires nothing more than a modern web browser (tested on firefox and chrome)</li>
-              <li>supports following region shapes: rectangle, circle, ellipse, polygon</li>
-              <li>supports multiple attributes for each image region</li>
               <li>import (and export) of region data from (to) text file in csv and json format</li>
-              <li>hundreds of images can be loaded and annotated with any performance degradation</li>
+              <li>hundreds of images can be loaded and annotated without any performance degradation</li>
             </ul>
             </p>
             <p>For more details, visit <a href="www.robots.ox.ac.uk/~vgg/software/via/">www.robots.ox.ac.uk/~vgg/software/via/</a></p>
