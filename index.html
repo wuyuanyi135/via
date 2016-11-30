@@ -469,7 +469,7 @@
           <span id="info_attribute" style="display: none;"></span>
         </div>
 
-        <input type="file" id="invisible_file_input" multiple name="files[]" style="display:none">
+        <input type="file" id="invisible_file_input" multiple name="files[]" style="display:none" onchange="">
       </div> <!-- end of navbar -->
 
       <div class="main">
@@ -559,8 +559,8 @@
 	      <li>Import a list of representative face images using [<a href="" onclick="">Face Labels &rarr; Import from Images</a>]. Representative images correspond to facial image of individuals that you wish to locate and  annotate in several images.</li>
 	      <li>Now [<a href="" onclick="load_images('image')">load the images</a>] that you wish to tag with rectangular facial regions.</li>
 	      <li>Press the key <b>n</b> (or <b>p</b>) to move to next (or previous image) and <b>l</b> to show the list of all images.</li>
-	      <li>Click mouse right button and drag to draw a rectangular region around a face in the loaded image. This newly created region is automatically selected.</li>
-	      <li>Press <b>a</b> key to show the face labels panel (if it is hidden). Click on one of the representative images to tag this region.</li>
+	      <li>Click mouse right button and drag to draw a rectangular region around a face in the loaded image. This newly created region is automatically selected. If you have more facial regions, you can continue to draw them.</li>
+	      <li>Press <b>a</b> key to show the face labels panel (if it is hidden). Click on one of the representative images to tag this region. The selection automatically moves to next untagged region (if any).</li>
 	      <li>Clicking on a region selects it allowing you to move, resize or delete them as needed.</li>
 	      <li>Remember to regularly save your work by clicking [Annotation &rarr; Save as CSV].</li>
 	      <li>Next time, to start from where you left, click [Annotation &rarr; Import] and point it to the CSV file saved in Step 7.</li>

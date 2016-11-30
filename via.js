@@ -41,6 +41,7 @@ var VIA_THETA_TOL = Math.PI/18; // 10 degrees
 var VIA_CANVAS_ZOOM_LEVELS = [0.25, 0.5, 0.75, 1.0, 2.0, 3.0, 4.0];
 var VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX = 3;
 var VIA_FACE_LABEL_ATTR_NAME = 'face_label';
+var VIA_FACE_LABEL_MAX_SIZE_KB = 512;
 
 var VIA_THEME_REGION_BOUNDARY_WIDTH = 4;
 var VIA_THEME_BOUNDARY_LINE_COLOR = "#1a1a1a";
@@ -88,6 +89,7 @@ var _via_is_all_region_selected = false;
 var _via_is_loaded_img_list_visible = false;
 var _via_is_attributes_input_panel_visible = false;
 var _via_is_canvas_zoomed = false;
+var _via_is_loading_current_image = false;
 
 // region
 var _via_current_shape = VIA_REGION_SHAPE.RECT;
@@ -209,11 +211,11 @@ function load_images(type) {
 	invisible_file_input.accept='.jpg,.jpeg,.png,.bmp';
 	switch(type) {
 	case 'image':
-            invisible_file_input.onchange = upload_local_images;
+	    invisible_file_input.onchange = upload_local_images;
             invisible_file_input.click();
 	    break;
 	case 'face_label':
-            invisible_file_input.onchange = upload_local_face_labels;
+	    invisible_file_input.onchange = upload_local_face_labels;
             invisible_file_input.click();
 	    break;
 	}       
@@ -331,9 +333,13 @@ function upload_local_images(event) {
 
 function upload_local_face_labels(event) {
     var selected_files = event.target.files;
-    for (var file of selected_files) {
-	if (file.type.includes('image/')) {
+    for (var i=0; i<selected_files.length; ++i) {
+	var file = selected_files[i];
+	if (file.type.includes('image/') &&
+	   file.size < 1024*VIA_FACE_LABEL_MAX_SIZE_KB) {
             load_local_image(file);
+	} else {
+	    console.log('Discarded images > ' + VIA_FACE_LABEL_MAX_SIZE_KB + 'KB');
 	}
     }
 }
@@ -643,11 +649,20 @@ function save_data_to_local_file(data, filename) {
 // Setup Elements in User Interface
 //
 function show_image(image_index) {
+    if (_via_is_loading_current_image) {
+	return;
+    }
+    
     var img_id = _via_image_id_list[image_index]
     if (_via_images.hasOwnProperty(img_id)) {
         var img_filename = _via_images[img_id].filename;
         var img_reader = new FileReader();
+	_via_is_loading_current_image = true;
 
+	img_reader.addEventListener( "loadstart", function(e) {
+	    document.getElementById("info_current_filename").innerHTML = "Loading image ...";
+	}, false);
+	
         img_reader.addEventListener( "progress", function(e) {
             //show_message("Loading image " + img_filename + " ... ", 1000);
         }, false);
@@ -663,6 +678,7 @@ function show_image(image_index) {
                 _via_image_index = image_index;
                 _via_current_image_filename = img_filename;
                 _via_current_image_loaded = true;
+		_via_is_loading_current_image = false;
                 
                 // retrive image panel dim. to stretch _via_canvas to fit panel
                 //main_content_width = 0.9*image_panel.offsetWidth;
@@ -1081,11 +1097,14 @@ function toggle_all_regions_selection(is_selected) {
     for (var i=0; i<_via_canvas_regions.length; ++i) {
         _via_canvas_regions[i].is_user_selected = is_selected;
     }
+    _via_is_all_region_selected = is_selected;
 }
 
 function select_only_region(region_id) {
     toggle_all_regions_selection(false);
     _via_canvas_regions[region_id].is_user_selected = true;
+    _via_user_sel_region_id = region_id;
+    _via_is_region_selected = true;
 }
 
 _via_canvas.addEventListener("mouseover", function(e) {
@@ -1299,7 +1318,8 @@ function count_missing_region_attr(img_id) {
     for( var i=0; i<_via_images[img_id].regions.length; ++i) {
 	var rattr = _via_images[img_id].regions[i].region_attributes;
 	if (rattr.get(VIA_FACE_LABEL_ATTR_NAME) == 'undefined' ||
-	    rattr.get(VIA_FACE_LABEL_ATTR_NAME) == '' ) {
+	    rattr.get(VIA_FACE_LABEL_ATTR_NAME) == '' ||
+	    !rattr.has(VIA_FACE_LABEL_ATTR_NAME)) {
 	    miss_region_attr_count += 1;
 	}
     }
@@ -1595,9 +1615,11 @@ window.addEventListener("keydown", function(e) {
     if ( (e.altKey || e.metaKey) ) {
 	if( e.which == 68 ) { // Alt + d
 	    delete_selected_regions();
-	    _via_reload_img_table = true;
+	    update_attributes_input_panel();
+	    _via_reload_img_table = true;	
 	    show_img_list();
-
+	    _via_redraw_canvas();
+	    _via_canvas.focus();
 	    e.preventDefault();
 	}
     }
@@ -1633,7 +1655,7 @@ window.addEventListener("keydown", function(e) {
 	}
     }
 
-    if ( e.which == 112 ) { // f
+    if ( e.which == 112 ) { // F1
 	show_getting_started_panel();
 	e.preventDefault();
 	return;
@@ -1641,7 +1663,6 @@ window.addEventListener("keydown", function(e) {
     
     if ( e.which == 70 ) { // f
 	load_images('face_label');
-	e.preventDefault();
 	return;
     }
 
@@ -1716,28 +1737,12 @@ window.addEventListener("keydown", function(e) {
 	if ( _via_is_region_selected ) {
 	    // clear all region selections
 	    _via_is_region_selected = false;
+	    _via_canvas_regions[_via_user_sel_region_id].is_user_selected = false;
 	    _via_user_sel_region_id = -1;
-	    for (var i=0; i < _via_images[_via_image_id].regions.length; ++i) {
-		_via_images[_via_image_id].regions[i].is_user_selected = false;
-		_via_canvas_regions[i].is_user_selected = false;
-	    }
 	}
 
-	if ( _via_is_canvas_zoomed ) {
-	    _via_is_canvas_zoomed=false;
-	    _via_canvas_zoom_level_index = VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX
-	    var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
-	    _via_ctx.scale(zoom_scale, zoom_scale);
-	    
-	    _via_canvas.height = _via_canvas_height;
-	    _via_canvas.width = _via_canvas_width;
-	    _via_canvas_scale = _via_canvas_scale_without_zoom;
-	    
-	    _via_load_canvas_regions(); // image to canvas space transform
-	    _via_redraw_canvas();
-	    _via_canvas.focus();
-	    show_message('Zoom reset', VIA_THEME_MESSAGE_TIMEOUT_MS);
-	    return;
+	if (_via_is_all_region_selected) {
+	    toggle_all_regions_selection(false);
 	}
 
 	if ( _via_is_user_drawing_polygon ) {
@@ -1759,6 +1764,7 @@ window.addEventListener("keydown", function(e) {
 	
 	e.preventDefault();
 	_via_redraw_canvas();
+	_via_canvas.focus();
     }
 
     if ( e.which == 121 ) { // F10 key used for debugging
@@ -1777,9 +1783,12 @@ function move_to_prev_image() {
     if (_via_images_count > 0) {
 	_via_is_region_selected = false;
 	_via_user_sel_region_id = -1;
+	_via_is_user_resizing_region = false;
+	_via_is_user_moving_region = false;
+	_via_is_all_region_selected = false;
+	_via_is_canvas_zoomed = false;
+	_via_canvas.style.cursor = "default";
 	
-	_via_current_sel_region_id = -1;
-
 	if ( _via_image_index == 0 ) {   
 	    show_image(_via_images_count - 1);
 	} else {
@@ -1792,8 +1801,11 @@ function move_to_next_image() {
     if (_via_images_count > 0) {
 	_via_is_region_selected = false;
 	_via_user_sel_region_id = -1;
-
-	_via_current_sel_region_id = -1;
+	_via_is_user_resizing_region = false;
+	_via_is_user_moving_region = false;
+	_via_is_all_region_selected = false;
+	_via_is_canvas_zoomed = false;
+	_via_canvas.style.cursor = "default";
 	
 	if ( _via_image_index == (_via_images_count-1) ) {   
 	    show_image(0);
@@ -1946,6 +1958,7 @@ function is_via_data_in_localStorage() {
 }
 
 function clear_localStorage() {
+    document.getElementById('localStorage_recovery_msg').innerHTML = '';
     localStorage.clear();
     show_home_panel();
 }
@@ -2091,10 +2104,23 @@ function update_attributes_input_panel() {
 
 function set_face_label(value) {
     if (_via_is_region_selected) {
-	var selregion = _via_images[_via_image_id].regions[_via_user_sel_region_id].region_attributes;
-	selregion.set(VIA_FACE_LABEL_ATTR_NAME, value);
+	var selregion = _via_images[_via_image_id].regions[_via_user_sel_region_id];
+	selregion.region_attributes.set(VIA_FACE_LABEL_ATTR_NAME, value);
+
+	// find out if any other region attribute is missing
+	for (var i=0; i<_via_canvas_regions.length; ++i) {
+	    var r = _via_images[_via_image_id].regions[i];
+	    if (r.region_attributes.get(VIA_FACE_LABEL_ATTR_NAME) == 'undefined' ||
+		typeof(r.region_attributes.get(VIA_FACE_LABEL_ATTR_NAME)) == 'undefined') {
+		_via_canvas_regions[_via_user_sel_region_id].is_user_selected = false;
+		_via_user_sel_region_id = i;
+		_via_canvas_regions[i].is_user_selected = true;
+		break;
+	    }
+	}
+		
 	update_attributes_input_panel();
-	_via_reload_img_table = true;
+	_via_reload_img_table = true;	
 	show_img_list();
 	_via_redraw_canvas();
 	_via_canvas.focus();
