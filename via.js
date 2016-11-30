@@ -26,7 +26,7 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-var VIA_VERSION = '0.1b';
+var VIA_VERSION = '0.1';
 var VIA_NAME = 'VGG Face Annotator';
 var VIA_SHORT_NAME = 'VFA';
 var VIA_REGION_SHAPE = { RECT:'rect'};
@@ -37,7 +37,6 @@ var VIA_SPECIAL_CHAR_SUBS = {',':'[comma]',
 			     '=':'[equal]'};
 var VIA_REGION_EDGE_TOL = 5;
 var VIA_REGION_MIN_DIM = 5;
-var VIA_THETA_TOL = Math.PI/18; // 10 degrees
 var VIA_CANVAS_ZOOM_LEVELS = [0.25, 0.5, 0.75, 1.0, 2.0, 3.0, 4.0];
 var VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX = 3;
 var VIA_FACE_LABEL_ATTR_NAME = 'face_label';
@@ -49,7 +48,7 @@ var VIA_THEME_BOUNDARY_FILL_COLOR = "#aaeeff";
 var VIA_THEME_SEL_REGION_FILL_COLOR = "#808080";
 var VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR = "#000000";
 var VIA_THEME_SEL_REGION_OPACITY = 0.5;
-var VIA_THEME_MESSAGE_TIMEOUT_MS = 5000;
+var VIA_THEME_MESSAGE_TIMEOUT_MS = 3000;
 var VIA_THEME_ATTRIBUTE_IMG_WIDTH = 64;
 var VIA_THEME_ATTRIBUTE_VALUE_FONT = '10pt Sans';
 var VIA_IMPORT_CSV_COMMENT_CHAR = '#';
@@ -339,7 +338,7 @@ function upload_local_face_labels(event) {
 	   file.size < 1024*VIA_FACE_LABEL_MAX_SIZE_KB) {
             load_local_image(file);
 	} else {
-	    console.log('Discarded images > ' + VIA_FACE_LABEL_MAX_SIZE_KB + 'KB');
+	    show_message('Discarded face label images  > ' + VIA_FACE_LABEL_MAX_SIZE_KB + 'KB', VIA_THEME_MESSAGE_TIMEOUT_MS);
 	}
     }
 }
@@ -1262,8 +1261,12 @@ function toggle_img_list() {
 
 // @todo: implement hierarchial clustering to better visualize file list
 function show_img_list() {
-    if (_via_images_count > 0 &&
-	_via_is_loaded_img_list_visible) {
+    if (_via_images_count == 0) {
+	show_message("Please load some images first!", VIA_THEME_MESSAGE_TIMEOUT_MS);
+	return;
+    }
+
+    if(_via_is_loaded_img_list_visible) {
 	if ( _via_reload_img_table ) {
 	    _via_loaded_img_fn_list = [];
 	    _via_loaded_img_region_attr_miss_count = [];
@@ -1301,8 +1304,6 @@ function show_img_list() {
 
 	loaded_img_list_panel.innerHTML = _via_loaded_img_table_html.join('');
 	loaded_img_list_panel.style.width = "300px";
-    } else {
-	show_message("Please load some images first!", VIA_THEME_MESSAGE_TIMEOUT_MS);
     }
 }
 
@@ -1555,25 +1556,25 @@ function update_ui_components() {
 window.addEventListener("keydown", function(e) {
     // user commands
     if ( e.ctrlKey ) {
-	if ( e.which == 83 ) { // Ctrl + s
+	if ( e.key == 's' ) { // Ctrl + s
 	    download_all_region_data('csv');
 	    e.preventDefault();
 	    return;
 	}
 
-	if ( e.which == 73 ) { // Ctrl + i
+	if ( e.key == 'i' ) { // Ctrl + i
 	    upload_region_data_file();
 	    e.preventDefault();
 	    return;
 	}
 
-	if ( e.which == 79 ) { // Ctrl + o
+	if ( e.key == 'o' ) { // Ctrl + o
 	    load_images('image');
 	    e.preventDefault();
 	    return;
 	}
 
-	if ( e.which == 65 ) { // Ctrl + a
+	if ( e.key == 'a' ) { // Ctrl + a
 	    toggle_all_regions_selection(true);
 	    _via_is_all_region_selected = true;
 	    _via_is_region_selected = false;
@@ -1584,7 +1585,7 @@ window.addEventListener("keydown", function(e) {
 	    return;
 	}
 
-	if ( e.which == 67 ) { // Ctrl + c
+	if ( e.key == 'c' ) { // Ctrl + c
 	    _via_copied_image_regions.splice(0);
 	    _via_copied_canvas_regions.splice(0);
 	    for (var i=0; i<_via_images[_via_image_id].regions.length; ++i) {
@@ -1600,7 +1601,7 @@ window.addEventListener("keydown", function(e) {
 	    return;
 	}
 
-	if ( e.which == 86 ) { // Ctrl + v
+	if ( e.key == 'v' ) { // Ctrl + v
 	    for (var i=0; i<_via_copied_image_regions.length; ++i) {
 		_via_images[_via_image_id].regions.push( _via_copied_image_regions[i] );
 		_via_canvas_regions.push( _via_copied_canvas_regions[i] );
@@ -1610,10 +1611,18 @@ window.addEventListener("keydown", function(e) {
 	    _via_redraw_canvas();
 	    return;
 	}
+
+	if ( e.key == 'f' ) { // f
+	    load_images('face_label');
+	    e.preventDefault();
+	    return;
+	}
+
+
     }
 
     if ( (e.altKey || e.metaKey) ) {
-	if( e.which == 68 ) { // Alt + d
+	if( e.key == 'd' ) { // Alt + d
 	    delete_selected_regions();
 	    update_attributes_input_panel();
 	    _via_reload_img_table = true;	
@@ -1621,38 +1630,61 @@ window.addEventListener("keydown", function(e) {
 	    _via_redraw_canvas();
 	    _via_canvas.focus();
 	    e.preventDefault();
+	    return;
 	}
     }
     
     // zoom in/out functionality
-    if (e.shiftKey) {
-	if ( e.keyCode == 90 ) { // Shift + Z
-	    // zoom out
-	    if (!_via_is_user_updating_attribute_value &&
-		!_via_is_user_updating_attribute_name &&
-		!_via_is_user_adding_attribute_name) {
+    if (e.key == '+') {
+	// zoom in
+	if (_via_canvas_zoom_level_index == (VIA_CANVAS_ZOOM_LEVELS.length-1)) {
+	    show_message('Further zoom-in not possible', VIA_THEME_MESSAGE_TIMEOUT_MS);
+	} else {
+	    _via_canvas_zoom_level_index += 1;
+	    
+	    _via_is_canvas_zoomed = true;
+	    var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
+	    _via_ctx.scale(zoom_scale, zoom_scale);
+	    
+	    _via_canvas.height = _via_canvas_height * zoom_scale;
+	    _via_canvas.width = _via_canvas_width * zoom_scale;
+	    _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
 
-		if (_via_canvas_zoom_level_index == 0) {
-		    show_message('Further zoom-out not possible', VIA_THEME_MESSAGE_TIMEOUT_MS);
-		} else {
-		    _via_canvas_zoom_level_index -= 1;
-		    
-		    _via_is_canvas_zoomed = true;
-		    var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
-		    _via_ctx.scale(zoom_scale, zoom_scale);
-		    
-		    _via_canvas.height = _via_canvas_height * zoom_scale;
-		    _via_canvas.width = _via_canvas_width * zoom_scale;
-		    _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
-
-		    _via_load_canvas_regions(); // image to canvas space transform
-		    _via_redraw_canvas();
-		    _via_canvas.focus();
-		    show_message('Zoomed out to level ' + zoom_scale, VIA_THEME_MESSAGE_TIMEOUT_MS);
-		}
-		return;
-	    }
+	    _via_load_canvas_regions(); // image to canvas space transform
+	    _via_redraw_canvas();
+	    _via_canvas.focus();
+	    show_message('Zoomed in to level ' + zoom_scale, VIA_THEME_MESSAGE_TIMEOUT_MS);
 	}
+	return;         
+    }
+
+    if (e.key == '-') {
+	// zoom out
+	if (_via_canvas_zoom_level_index == 0) {
+	    show_message('Further zoom-out not possible', VIA_THEME_MESSAGE_TIMEOUT_MS);
+	} else {
+	    _via_canvas_zoom_level_index -= 1;
+	    
+	    _via_is_canvas_zoomed = true;
+	    var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
+	    _via_ctx.scale(zoom_scale, zoom_scale);
+	    
+	    _via_canvas.height = _via_canvas_height * zoom_scale;
+	    _via_canvas.width = _via_canvas_width * zoom_scale;
+	    _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
+
+	    _via_load_canvas_regions(); // image to canvas space transform
+	    _via_redraw_canvas();
+	    _via_canvas.focus();
+	    show_message('Zoomed out to level ' + zoom_scale, VIA_THEME_MESSAGE_TIMEOUT_MS);
+	}
+	return;
+    }
+    if ( e.key == '0' ) { // 0
+	// reset the zoom level
+	reset_zoom_level();
+	show_message('Zoom reset', VIA_THEME_MESSAGE_TIMEOUT_MS);
+	return;
     }
 
     if ( e.which == 112 ) { // F1
@@ -1661,11 +1693,6 @@ window.addEventListener("keydown", function(e) {
 	return;
     }
     
-    if ( e.which == 70 ) { // f
-	load_images('face_label');
-	return;
-    }
-
     if (e.which == 78 || e.which == 39) { // n or right arrow
 	move_to_next_image();
 	e.preventDefault();
@@ -1677,55 +1704,15 @@ window.addEventListener("keydown", function(e) {
 	return;
     }
 
-    if (e.which == 65) { // a
+    if (e.key == 'a') { // a
 	toggle_attributes_input_panel();
 	return;
     }
     
-    if ( e.which == 76 ) { // l
+    if ( e.key == 'l' ) { // l
 	toggle_img_list();
 	e.preventDefault();
 	return;
-    }
-
-    if ( e.which == 48 ) { // 0
-	// reset the zoom level
-	if (!_via_is_user_updating_attribute_value &&
-	    !_via_is_user_updating_attribute_name &&
-	    !_via_is_user_adding_attribute_name) {
-
-	    reset_zoom_level();
-	    show_message('Zoom reset', VIA_THEME_MESSAGE_TIMEOUT_MS);
-	    return;
-	}
-    }
-
-    if ( e.which == 90 ) { // z
-	// zoom in
-	if (!_via_is_user_updating_attribute_value &&
-	    !_via_is_user_updating_attribute_name &&
-	    !_via_is_user_adding_attribute_name) {
-
-	    if (_via_canvas_zoom_level_index == (VIA_CANVAS_ZOOM_LEVELS.length-1)) {
-		show_message('Further zoom-in not possible', VIA_THEME_MESSAGE_TIMEOUT_MS);
-	    } else {
-		_via_canvas_zoom_level_index += 1;
-		
-		_via_is_canvas_zoomed = true;
-		var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
-		_via_ctx.scale(zoom_scale, zoom_scale);
-		
-		_via_canvas.height = _via_canvas_height * zoom_scale;
-		_via_canvas.width = _via_canvas_width * zoom_scale;
-		_via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
-
-		_via_load_canvas_regions(); // image to canvas space transform
-		_via_redraw_canvas();
-		_via_canvas.focus();
-		show_message('Zoomed in to level ' + zoom_scale, VIA_THEME_MESSAGE_TIMEOUT_MS);
-	    }
-	    return;         
-	}
     }
 
     if ( e.which == 27 ) { // Esc
@@ -1765,16 +1752,19 @@ window.addEventListener("keydown", function(e) {
 	e.preventDefault();
 	_via_redraw_canvas();
 	_via_canvas.focus();
+	return;
     }
 
     if ( e.which == 121 ) { // F10 key used for debugging
 	print_current_state_vars();
 	print_current_image_data();
 	e.preventDefault();
+	return;
     }
     if (e.which == 113) { // F2 for about
 	show_about_panel();
 	e.preventDefault();
+	return;
     }
     
 });
@@ -1835,7 +1825,6 @@ function reset_zoom_level() {
 // Communication from javascript to UI
 //
 function show_message(msg, timeout_ms) {
-    /*
     if ( _via_message_clear_timer ) {
 	clearTimeout(_via_message_clear_timer); // stop any previous timeouts
     }
@@ -1847,7 +1836,6 @@ function show_message(msg, timeout_ms) {
 	    document.getElementById('message_panel').innerHTML = ' ';
 	}, timeout_ms);
     }
-    */
     return;    
 }
 
