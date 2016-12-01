@@ -322,9 +322,19 @@ function load_face_label_images(event) {
 function set_face_label_image(file, callback_function) {
     var filename = file.name.split('.');
     var filename = filename[0]; // remove extension
-    var fileparts = filename.split('_');
-    var file_id = parseInt(fileparts[0]);
-    fileparts.splice(0, 1); // remove file id
+    var filename_split = filename.split('_');
+    
+    var fileparts = [];
+    var file_id = -1;
+    
+    if (filename_split.length == 3) {
+	file_id = parseInt(filename_split[0]);
+	filename_split.splice(0, 1); // remove file id
+	fileparts = filename_split.slice();
+    } else {
+	file_id = _via_face_label_list.length;
+	fileparts.push(filename);
+    }
     var img_reader = new FileReader();
 
     img_reader.addEventListener( "load", function() {

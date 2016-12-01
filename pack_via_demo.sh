@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-VIA_JS_FILE=via.js
+VIA_JS_FILE=via_face.js
 VIA_DEMO_JS_FILE=via_face_demo.js
 TEMPLATE_HTML_FILE=index.html
 TARGET_HTML_FILE=via_face_demo.html
