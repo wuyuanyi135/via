@@ -1,3 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8"> 
+    <!--
+        VGG Image Annotator (via)
+        www.robots.ox.ac.uk/~vgg/software/via/
+
+        Copyright (c) 2016, Abhishek Dutta.
+        All rights reserved.
+
+        Redistribution and use in source and binary forms, with or without
+        modification, are permitted provided that the following conditions are met:
+
+        Redistributions of source code must retain the above copyright notice, this
+        list of conditions and the following disclaimer.
+        Redistributions in binary form must reproduce the above copyright notice,
+        this list of conditions and the following disclaimer in the documentation
+        and/or other materials provided with the distribution.
+        THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+        AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+        IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+        ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+        LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+        CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+        SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+        INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+        CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+        ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+        POSSIBILITY OF SUCH DAMAGE.
+
+      -->
+    <title>VGG Face Annotator</title>
+    <meta name="author" content="Abhishek Dutta">
+    <meta name="description" content="VGG Face Annotator lets you mark and tag rectangular facial regions in an image. It is a fork of VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via/) adapted for face annotation.">
+
+    <!-- Google analytics : used in Seebibyte project to measure impact-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-20555581-2', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+    
+    
+    <!-- CSS style definition -->
+    <style type="text/css">     
+      body {
+      min-width: 800px;
+      padding: 0;
+      margin: 0;
+      margin-bottom: 3em;
+      }
+      
+      #wrapper {
+      display: table;
+      text-align: center;
+      }
+      
+      #navbar {
+      position: relative;
+      top: 0;
+      left: 0;
+      font-family: Sans;
+      display: table;
+      height: 1px;
+      background: #000000;
+      width: 100%;
+      z-index: 1;
+      }
+      
+      #navbar ul {
+      display: inline;
+      font-size: medium;
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #333;
+      }
+
+      #navbar li {
+      float: left;
+      }
+
+      #navbar li a, .drop_menu_item {
+      display: inline-block;
+      color: white;
+      text-align: center;
+      padding: 1em 1.2em;
+      text-decoration: none;
+      }
+
+      #navbar li a:hover, .dropdown:hover .drop_menu_item {
+      background-color: #999999;
+      cursor: pointer;
+      }
+
+      #navbar li.dropdown {
+      display: inline-block;
+      }
+
+      #navbar .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: #333333;
+      min-width: 160px;
+      border: 1px solid #ffffff;
+      }
+
+      #navbar .dropdown-content a {
+      color: #ffffff;
+      padding: 0.4em 0.6em;
+      text-decoration: none;
+      font-size: small;
+      display: block;
+      text-align: left;
+      background-color: #333333;
+      float: none;
+      }
+
+      #navbar .dropdown-content a:hover {
+      background-color: #000000;
+      color: #ffff00;
+      }
+
+      #navbar .dropdown:hover .dropdown-content {
+      display: block;
+      }
+
+      .main {
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+      }
+
+      .box {
+      display: table-cell;
+      padding: 1em 0;
+      vertical-align: top;
+      }
+
+      .box canvas {
+      position: relative;
+      }
+
+      /* Panel in the left hand side of image canvas */
+      .sidebar {
+      font-family: Mono;
+      font-size: small;
+      padding: 1em 1em;
+      vertical-align: top;
+      width: 280px;
+      }
+      .sidebar .title {
+      font-family: Sans;
+      font-size: large;
+      padding-top: 1em;
+      padding-bottom: 0.5em;
+      }
+      .sidebar .info table {
+      border-collapse: collapse;
+      table-layout: fixed;
+      }
+      .sidebar .info table, td {
+      border: 1px solid #cccccc;
+      padding: 0 0.4em;
+      line-height: 2em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      }
+
+      /* status message panel at bottom of page */
+      #message_panel {
+      position: fixed;
+      left: 0;
+      bottom: 0px;
+      line-height: 3em;
+      width: 100%;
+      background-color: #333333;
+      color: #ffff00;
+      font-size: small;
+      font-family: Mono;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      z-index: 1000;
+      }
+      
+      #invisible_file_input {
+      width: 0.1px;
+      height: 0.1px;
+      opacity: 0;
+      overflow: hidden;
+      position: absolute;
+      z-index: -1;
+      }
+
+      /* panel that contains the canvas */
+      #image_panel {
+      display: inline-block;
+      margin: auto;
+      }
+      
+      .action_text_link {
+      background-color: #aaeeff;
+      color: #000000;
+      }
+      .action_text_link:hover {
+      cursor: pointer;
+      }
+
+      .svg_button:hover {
+      cursor: pointer;
+      }
+      .js_button {
+      color: blue;
+      cursor: pointer;
+      }
+
+      /* image info (on top right corner) */
+      #image_info {
+      display: inline;
+      position: relative;
+      color: yellow;
+      font-family: Mono;
+      font-size: small;
+      top: 1em;
+      left: 6em;
+      }
+
+      /* loaded image list panel that pop's up on right hand side*/
+      #loaded_img_list_panel {
+      height: 92%;
+      width: 0;
+      position: fixed;
+      z-index: 1;
+      top: 51px;
+      right: 0;
+      background-color: #e6e6e6;
+      overflow: scroll;
+      /*transition: 0.5s;*/
+      font-family: Mono;
+      font-size: small;
+      padding-top: 1em;
+      padding-bottom: 1em;
+      padding-left: 0.4em;
+      }
+      #loaded_img_list_panel ul {
+      float: left;
+      line-height: 1.2em;
+      padding-left: 0;
+      list-style-type: none;
+      }
+      #loaded_img_list_panel li:hover {
+      background-color: #cccccc;
+      color: #000000;
+      cursor: pointer;
+      }
+
+      /* region and file attributes input panel (spreadsheet like) */
+      #attributes_input_panel {
+      display: none;
+      position: fixed;
+      z-index: 2;
+      bottom: 0;
+      width: 100%;
+      height: 180px;
+      overflow: auto;
+      background-color: #ffffff;
+      border-top: 4px solid #000000;
+      padding-bottom: 2em;
+      }
+      #panel_close_button {
+      display: inline-block;
+      color: #808080;
+      float: right;
+      font-size: 2em;
+      font-weight: bold;
+      padding-right: 0.5em;
+      }
+      #panel_close_button:hover {
+      color: red;
+      text-decoration: none;
+      cursor: pointer;
+      }
+
+      /* face label */
+      .face_label, .active_face_label {
+      display: inline-block;
+      padding: 1em 1em;
+      padding-bottom: 1em;
+      font-family: Sans;
+      font-size: xx-small;
+      text-align: center;
+      }
+      
+      .active_face_label:hover {
+      background-color: #e6e6e6;
+      color: #ff0000;
+      cursor: pointer;
+      }
+      .active_face_label.selected {
+      background-color: #0066ff;
+      color: #ffffff;
+      }
+    </style>
+  </head>
+
+  <body onload="main()" onresize="update_ui_components()">
+    <!-- Start: Definition SVG for icons -->
+    <svg style="position: absolute; width: 0; height: 0; overflow: hidden;" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+      <defs>
+        <symbol id="icon_img_list">
+          <title>Show image list</title>
+          <rect x="2" y="10" width="30" height="2"/>
+          <rect x="2" y="20" width="30" height="2"/>
+          <rect x="2" y="30" width="30" height="2"/>
+        </symbol>        
+      </defs>
+    </svg>
+    <!-- End: Define SVG for icons -->
+
+    <div class="wrapper">
+      <!-- Start: navigation bar (present on top) -->
+      <div id="navbar">
+        <ul> 
+          <li><a onclick="show_home_panel()" title="Home">Home</a></li>
+          <li class="dropdown"><a title="Image" class="drop_menu_item">Image &#9662</a>
+            <div class="dropdown-content">
+              <a onclick="load_images('image')" title="Load (or add) a set of images from local disk">Load or add images</a>
+              <a onclick="toggle_img_list()" title="Show/hide the list of currently loaded images">Show/hide image list</a>
+            </div>
+          </li>
+          <li class="dropdown"><a title="Annotations" class="drop_menu_item">Annotation &#9662</a>
+            <div class="dropdown-content">
+              <a onclick="download_all_region_data('csv')" title="Save image region annotations as a CSV(comma separated value) file">Save as CSV</a>
+              <a onclick="download_all_region_data('json')" title="Save image region annotations as a JSON(Javascript Object Notation) file">Save as JSON</a>
+              <a onclick="upload_region_data_file()" title="Import existing region data from CSV or JSON file">Import</a>
+            </div>
+          </li>
+          <li><a onclick="load_images('face_label')" title="Import Face Labels">Import Face Labels</a></li>
+          <li class="dropdown"><a onclick="show_about_panel()" title="Help">Help &#9662</a>
+            <div class="dropdown-content">
+              <a onclick="show_getting_started_panel()" title="Getting started guide">Getting ostarted</a>
+              <a onclick="show_about_panel()" title="About VGG Image Annotator (VIA)">About VIA</a>
+            </div>
+          </li>
+        </ul>
+
+        <div id="image_info">
+          <div style="display: inline-block; fill: white; stroke: white;" ><a onclick="toggle_img_list()" title="Browse currently loaded images" class="svg_button"><svg width="18" viewBox="0 0 32 32"><use xlink:href="#icon_img_list"></use></svg></a></div>
+          <span id="info_current_fileid"></span> <span id="info_current_filename"><span class="action_text_link" onclick="load_images('image')" title="load local images">[click to load images]</span></span>
+        </div>
+
+        <input type="file" id="invisible_file_input" multiple name="files[]" style="display:none" onchange="">
+      </div>
+      <!-- End: navigation bar (present on top) -->
+
+      <div class="main">
+        <!-- Start: information display in the left side bar -->
+        <div class="box sidebar" id="info_panel">
+          <div class="title">Face Labels</div>
+          <span class="action_text_link" onclick="toggle_attributes_input_panel()" title="Show/Hide attributes">[click to show/hide labels]</span>
+          
+          <div class="title">Keyboard Shortcuts</div>
+          <div class="info">
+            <table>
+              <tr>
+                <td>n/p (&larr;/&rarr;)</td>
+                <td>Next/Previous image</td>
+              </tr>
+              <tr>
+                <td>a</td>
+                <td>Show/hide attributes</td>
+              </tr>
+              <tr>
+                <td>l</td>
+                <td>Show/hide image list</td>
+              </tr>
+              <tr>
+                <td>+/-/0</td>
+                <td>Zoom in/out/reset</td>
+              </tr>
+              <tr>
+                <td>Ctrl + o</td>
+                <td>Load or add images</td>
+              </tr>
+              <tr>
+                <td>Ctrl + f</td>
+                <td>Load face labels</td>
+              </tr>
+              <tr>
+                <td>Ctrl + s</td>
+                <td>Download region data</td>
+              </tr>
+              <tr>
+                <td>Ctrl + i</td>
+                <td>Import region data</td>
+              </tr>
+              <tr>
+                <td>Ctrl + a</td>
+                <td>Select all regions</td>
+              </tr>
+              <tr>
+                <td>Ctrl + c</td>
+                <td>Copy sel. regions</td>
+              </tr>           
+              <tr>
+                <td>Ctrl + v</td>
+                <td>Paste sel. regions</td>
+              </tr>
+              <tr>
+                <td>Esc</td>
+                <td>Cancel operation</td>
+              </tr>
+              <tr>
+                <td style="width: 6em;">Alt + d</td>
+                <td>Delete image region</td>
+              </tr>           
+              <tr>
+                <td style="width: 6em;">F1</td>
+                <td>Help getting started</td>
+              </tr>           
+            </table>
+          </div>
+        </div>
+        <!-- End: information display in the left side bar -->
+
+        <!-- Start: image canvas and other information panels -->
+        <div class="box" id="image_panel">
+          <canvas id="image_canvas">Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.</canvas>
+
+          <div id="start_info_panel" style="width: 40em;">
+            <p>Quick start guide for face annotator:</p>
+            <p>
+              <ol>
+                <li>Import the list of representative face images using [<span class="js_button" title="Load face label images" onclick="load_images('face_label')">Import Face Labels</span>]</li>
+                <li><span class="js_button" title="Load images" onclick="load_images('image')">[Load the images]</span> that you wish to annotate, draw rectangular regions by clicking and dragging the mouse cursor and select a face from the list of representative faces.</li>
+              </ol>
+            </p>
+            <div id="localStorage_recovery_msg"></div>
+          </div>
+
+          <div id="getting_started_panel" style="width: 40em;">
+            <p>VGG Face Annotator lets you mark and tag rectangular facial regions in an image.</p>
+            <h3>Getting started</h3>
+            <ol>
+              <li>Import a list of representative face images using [<span class="js_button" title="Load face label images" onclick="load_images('face_label')">Import Face Labels</span>]. Representative images correspond to facial image of individuals that you wish to locate and  annotate in several images.</li>
+              <li>Now [<span class="js_button" title="Load images" onclick="load_images('image')">load the images</span>] that you wish to tag with rectangular facial regions.</li>
+              <li>Press the key <b>n</b> (or <b>p</b>) to move to next (or previous image) and <b>l</b> to show the list of all images.</li>
+              <li>Click mouse right button and drag to draw a rectangular region around a face in the loaded image. This newly created region is automatically selected. If you have more facial regions, you can continue to draw them.</li>
+              <li>Press <b>a</b> key to show the face labels panel (if it is hidden). Click on one of the representative images to tag this region. The selection automatically moves to next untagged region (if any).</li>
+              <li>Clicking on a region selects it allowing you to move, resize or delete them as needed.</li>
+              <li>Remember to regularly save your work by clicking [Annotation &rarr; Save as CSV].</li>
+              <li>Next time, to start from where you left, click [Annotation &rarr; Import] and point it to the CSV file saved in Step 7.</li>
+            </ol>
+          </div>
+          
+          <div id="img_list_panel"></div>
+
+          <div class="" id="about_panel" style="width: 40em;">
+            <p>VGG Face Annotator (VFA) lets you mark and tag rectangular facial regions in an image. Such tagged image regions are useful for supervised training of learning algorithms.</p>
+            <p>VFA is a fork of <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">VGG Image Annotator (VIA)</a> adapted for face annotation. VIA is an <a href="https://gitlab.com/vgg/via/">open source project</a> developed and maintained at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.</p>
+            <p>
+              Features:
+            <ul>
+              <li>based solely on HTML, CSS and Javascript (no dependecies on any javascript libraries)</li>
+              <li>can be used offline (complete application packaged in a single html file of size &lt; 200KB)</li>
+              <li>requires nothing more than a modern web browser (tested on firefox and chrome)</li>
+              <li>import (and export) of region data from (to) text file in csv and json format</li>
+              <li>hundreds of images can be loaded and annotated without any performance degradation</li>
+            </ul>
+            </p>
+            <p>For more details, visit <a href="www.robots.ox.ac.uk/~vgg/software/via/">www.robots.ox.ac.uk/~vgg/software/via/</a></p>
+          </div>
+          
+        </div>
+        <!-- End: image canvas and other information panels -->
+
+        <!-- A panel that pop's up on right hand side and shows the list
+             of currently loaded image
+          -->
+        <div id="loaded_img_list_panel"></div>
+      </div> <!-- end of main -->
+    </div> <!-- end of wrapper -->
+
+    <!-- A panel that pop's up at the bottom to show status messages -->
+    <div id="message_panel"></div>
+
+    <!-- A panel containing list of face labels -->
+    <div id="attributes_input_panel">
+      <span id="panel_close_button" onclick="toggle_attributes_input_panel()">&times</span>
+      <div id="face_label_panel"></div>
+    </div>
+    
+    <!--<script type="text/javascript" src="via_face_demo.js">-->
+    <script type="text/javascript">
+      <!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
+    </script>
+    <!--<script type="text/javascript" src="via.js">-->
+    <script type="text/javascript">
+      <!--AUTO_INSERT_VIA_JS_HERE-->
 /*
   VGG Image Annotator (via)
   www.robots.ox.ac.uk/~vgg/software/via/
@@ -958,8 +1466,6 @@ _via_canvas.addEventListener('mouseup', function(e) {
                 toggle_all_regions_selection(false);
             }
             _via_canvas_regions[region_id].is_user_selected = true;
-
-            show_message('Region selected. Click and drag to move or resize the region');
         } else {
             if ( _via_is_user_drawing_region ) {
                 // clear all region selection
@@ -1890,7 +2396,8 @@ function update_attributes_input_panel() {
     if (_via_face_label_list.length == 0) {
         var htmlmsg = '<div style="margin: auto; text-align: center; width: 40%;padding: 2em 0;">' +
             'Import a list of representative face images using ' +
-            '[<a href="" onclick="">Face Labels &rarr; Import from Images</a>]. ' +
+            '[<span class="js_button" title="Load face label images" ' +
+	    'onclick="load_images(\'face_label\')">Import Face Labels</span>]. ' +
             'Representative images correspond to facial image of individuals that ' +
             'you wish to locate and  annotate in several images.</div>';
         face_label_panel.innerHTML = htmlmsg;
@@ -1960,3 +2467,6 @@ function set_face_label(value) {
         _via_canvas.focus();
     }
 }
+    </script>
+  </body>
+</html>

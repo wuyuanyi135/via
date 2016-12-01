@@ -1,9 +1,9 @@
 #!/usr/bin/env sh
 
 VIA_JS_FILE=via.js
-VIA_DEMO_JS_FILE=via_demo.js
+VIA_DEMO_JS_FILE=via_face_demo.js
 TEMPLATE_HTML_FILE=index.html
-TARGET_HTML_FILE=via_demo.html
+TARGET_HTML_FILE=via_face_demo.html
 TMP_FILE=temp_file.html
 
 # source: http://stackoverflow.com/questions/16811173/bash-inserting-one-files-content-into-another-file-after-the-pattern

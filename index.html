@@ -34,7 +34,7 @@
     <meta name="author" content="Abhishek Dutta">
     <meta name="description" content="VGG Face Annotator lets you mark and tag rectangular facial regions in an image. It is a fork of VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via/) adapted for face annotation.">
 
-    <!-- Google analytics : used in Seebibyte project to measure impact
+    <!-- Google analytics : used in Seebibyte project to measure impact-->
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -45,7 +45,7 @@
       ga('send', 'pageview');
 
     </script>
-    -->
+    
     
     <!-- CSS style definition -->
     <style type="text/css">     
@@ -218,6 +218,10 @@
       .svg_button:hover {
       cursor: pointer;
       }
+      .js_button {
+      color: blue;
+      cursor: pointer;
+      }
 
       /* image info (on top right corner) */
       #image_info {
@@ -329,8 +333,8 @@
           <li><a onclick="show_home_panel()" title="Home">Home</a></li>
           <li class="dropdown"><a title="Image" class="drop_menu_item">Image &#9662</a>
             <div class="dropdown-content">
-              <a onclick="load_images('image')" title="Load (or add) a set of images from local disk">Load or Add Images</a>
-              <a onclick="show_img_list()" title="Browse currently loaded images">Show Loaded Image List</a>
+              <a onclick="load_images('image')" title="Load (or add) a set of images from local disk">Load or add images</a>
+              <a onclick="toggle_img_list()" title="Show/hide the list of currently loaded images">Show/hide image list</a>
             </div>
           </li>
           <li class="dropdown"><a title="Annotations" class="drop_menu_item">Annotation &#9662</a>
@@ -343,7 +347,7 @@
           <li><a onclick="load_images('face_label')" title="Import Face Labels">Import Face Labels</a></li>
           <li class="dropdown"><a onclick="show_about_panel()" title="Help">Help &#9662</a>
             <div class="dropdown-content">
-              <a onclick="show_getting_started_panel()" title="Getting started guide">Getting started</a>
+              <a onclick="show_getting_started_panel()" title="Getting started guide">Getting ostarted</a>
               <a onclick="show_about_panel()" title="About VGG Image Annotator (VIA)">About VIA</a>
             </div>
           </li>
@@ -436,8 +440,8 @@
             <p>Quick start guide for face annotator:</p>
             <p>
               <ol>
-                <li>Import the list of representative face images using [<span style="cursor: pointer; color: blue;" title="Load face label images" onclick="load_images('face_label')">Import Face Labels</span>]</li>
-                <li><span style="cursor: pointer; color: blue;" title="Load images" onclick="load_images('image')">[Load the images]</span> that you wish to annotate, draw rectangular regions by clicking and dragging the mouse cursor and select a face from the list of representative faces.</li>
+                <li>Import the list of representative face images using [<span class="js_button" title="Load face label images" onclick="load_images('face_label')">Import Face Labels</span>]</li>
+                <li><span class="js_button" title="Load images" onclick="load_images('image')">[Load the images]</span> that you wish to annotate, draw rectangular regions by clicking and dragging the mouse cursor and select a face from the list of representative faces.</li>
               </ol>
             </p>
             <div id="localStorage_recovery_msg"></div>
@@ -447,8 +451,8 @@
             <p>VGG Face Annotator lets you mark and tag rectangular facial regions in an image.</p>
             <h3>Getting started</h3>
             <ol>
-              <li>Import a list of representative face images using [<a href="" onclick="">Face Labels &rarr; Import from Images</a>]. Representative images correspond to facial image of individuals that you wish to locate and  annotate in several images.</li>
-              <li>Now [<a href="" onclick="load_images('image')">load the images</a>] that you wish to tag with rectangular facial regions.</li>
+              <li>Import a list of representative face images using [<span class="js_button" title="Load face label images" onclick="load_images('face_label')">Import Face Labels</span>]. Representative images correspond to facial image of individuals that you wish to locate and  annotate in several images.</li>
+              <li>Now [<span class="js_button" title="Load images" onclick="load_images('image')">load the images</span>] that you wish to tag with rectangular facial regions.</li>
               <li>Press the key <b>n</b> (or <b>p</b>) to move to next (or previous image) and <b>l</b> to show the list of all images.</li>
               <li>Click mouse right button and drag to draw a rectangular region around a face in the loaded image. This newly created region is automatically selected. If you have more facial regions, you can continue to draw them.</li>
               <li>Press <b>a</b> key to show the face labels panel (if it is hidden). Click on one of the representative images to tag this region. The selection automatically moves to next untagged region (if any).</li>
@@ -495,12 +499,12 @@
       <div id="face_label_panel"></div>
     </div>
     
-    <!--<script type="text/javascript" src="via_demo.js">-->
-    <!--<script type="text/javascript">-->
+    <!--<script type="text/javascript" src="via_face_demo.js">-->
+    <script type="text/javascript">
       <!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
-    <!--</script>-->
-    <script type="text/javascript" src="via.js">
-    <!--<script type="text/javascript">-->
+    </script>
+    <!--<script type="text/javascript" src="via.js">-->
+    <script type="text/javascript">
       <!--AUTO_INSERT_VIA_JS_HERE-->
     </script>
   </body>
