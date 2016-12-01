@@ -129,7 +129,7 @@ var face_label_panel = document.getElementById('face_label_panel');
 
 function main() {
     show_message(VIA_NAME + ' (' + VIA_SHORT_NAME + ') ' +
-		 'version ' + VIA_VERSION,
+                 'version ' + VIA_VERSION,
                  2*VIA_THEME_MESSAGE_TIMEOUT_MS);
     show_home_panel();
     //start_demo_session(); // defined in via_demo.js
@@ -206,7 +206,7 @@ function load_images(type) {
 
 function download_all_region_data(type) {
     var d = package_region_data(type);
-    var dblob = new Blob( all_region_data,
+    var dblob = new Blob( d,
                           {type: 'text/'+type+';charset=utf-8'});
     var size = dblob.size/(1024*1024);
 
@@ -535,9 +535,7 @@ function package_region_data(return_type) {
 
                     var rdata = regions[i].region_attributes.get(VIA_FACE_LABEL_ATTR_NAME);
                     
-                    csvdata.push('\n' + prefix + ',' +
-                                 region_shape_attr_str + ',' +
-                                 '"' + rdata + '"');
+                    csvdata.push('\n' + prefix + ',' + sdata + ',' + '"' + rdata + '"');
                 }
             }
         }
@@ -595,20 +593,22 @@ function attr_map_to_str(attr) {
 }
 
 function remove_special_chars(str) {
-    str1 = str;
+    var s = String(str);
     for (var key in VIA_SPECIAL_CHAR_SUBS) {
-        str1 = str1.replace(key, VIA_SPECIAL_CHAR_SUBS[key]);
+        s = s.replace(new RegExp(key, 'g'),
+                      VIA_SPECIAL_CHAR_SUBS[key]);
     }
-    return str1;
+    return s;
 }
 
 function substitute_special_chars(str) {
-    str1 = str;
+    var s = String(str);
     for (var key in VIA_SPECIAL_CHAR_SUBS) {
         var value = VIA_SPECIAL_CHAR_SUBS[key];
-        str1 = str1.replace(value, key);
+        s = s.replace(new RegExp(value, 'g'),
+                      key);
     }
-    return str1;
+    return s;
 }
 
 function save_data_to_local_file(data, filename) {
@@ -1201,7 +1201,7 @@ function show_img_list() {
 
     if(_via_is_loaded_img_list_visible) {
         if ( _via_reload_img_table ) {
-	    reload_img_table();
+            reload_img_table();
             _via_reload_img_table = false;
         }
 
@@ -1222,7 +1222,7 @@ function reload_img_table() {
     
     _via_loaded_img_table_html = [];
     _via_loaded_img_table_html.push('<span id="panel_close_button" ' +
-				    'onclick="toggle_img_list()">&times</span>');
+                                    'onclick="toggle_img_list()">&times</span>');
     _via_loaded_img_table_html.push('<h3>Image List</h3>');
     _via_loaded_img_table_html.push('<ul>');
     for (var i=0; i<_via_images_count; ++i) {
@@ -1230,15 +1230,15 @@ function reload_img_table() {
         if (i == _via_image_index) {
             // highlight the current entry
             fni += '<li style="cursor: default;">';
-	    fni += '<b>[' + (i+1) + '] ' + _via_loaded_img_fn_list[i] + '</b>';
+            fni += '<b>[' + (i+1) + '] ' + _via_loaded_img_fn_list[i] + '</b>';
         } else {
             fni += '<li onclick="jump_to_image(' + (i) + ')">';
-	    fni += '[' + (i+1) + '] ' + _via_loaded_img_fn_list[i];
+            fni += '[' + (i+1) + '] ' + _via_loaded_img_fn_list[i];
         }
 
         if (_via_loaded_img_region_attr_miss_count[i]) {
             fni += ' (' + '<span style="color: red;">';
-	    fni += _via_loaded_img_region_attr_miss_count[i] + '</span>' + ')'
+            fni += _via_loaded_img_region_attr_miss_count[i] + '</span>' + ')'
         }
         
         fni += '</li>';
@@ -1726,7 +1726,7 @@ function show_message(msg, t) {
 function show_filename_info() {
     if ( _via_current_image_loaded ) {
         document.getElementById("info_current_filename").innerHTML = _via_current_image_filename;
-	var fid_info = "(" + (_via_image_index+1) + " of " + _via_images_count + ")";
+        var fid_info = "(" + (_via_image_index+1) + " of " + _via_images_count + ")";
         document.getElementById("info_current_fileid").innerHTML = fid_info;
     } else {
         document.getElementById("info_current_filename").innerHTML = "";
@@ -1799,19 +1799,19 @@ function show_localStorage_recovery_options() {
     
     hstr.push('<div style="margin-top: 4em; padding: 1em; border: 1px solid #cccccc;">');
     hstr.push('<h3 style="border-bottom: 1px solid #5599FF">' +
-	      'Data Recovery from Browser Cache</h3>');
+              'Data Recovery from Browser Cache</h3>');
     hstr.push('<ul><li>Data saved on : ' + date_of_saved_data);
     hstr.push('<br/><span class="action_text_link" ' +
-	      'onclick="download_localStorage_data(\'csv\')" ' +
-	      'title="Recover annotation data">[Save as CSV]</span>');
+              'onclick="download_localStorage_data(\'csv\')" ' +
+              'title="Recover annotation data">[Save as CSV]</span>');
     hstr.push(' | ');
     hstr.push('<span class="action_text_link" ' +
-	      'onclick="download_localStorage_data(\'json\')" ' +
-	      'title="Recover annotation data">[Save as JSON]</span>');
+              'onclick="download_localStorage_data(\'json\')" ' +
+              'title="Recover annotation data">[Save as JSON]</span>');
     hstr.push(' | ');
     hstr.push('<span class="action_text_link" ' +
-	      'onclick="clear_localStorage()" ' +
-	      'title="Discard annotation data">[Discard Data]</span>');
+              'onclick="clear_localStorage()" ' +
+              'title="Discard annotation data">[Discard Data]</span>');
     hstr.push('</li></ul>');
     hstr.push('<p><b>If you continue, the cached data will be discarded!</b></p></div>');
     
@@ -1823,20 +1823,12 @@ function download_localStorage_data(type) {
     case 'csv':
         var d = JSON.parse( localStorage.getItem('_via_images') );
         var csvdata = [];
-        var csvheader = '#filename,file_size,file_attributes,' +
-	    'region_count,region_id,region_shape_attributes,region_attributes';
+        var csvheader = '#filename,file_size,face_count,face_id,x,y,width,height,';
         csvdata.push(csvheader);
 
         for (var image_id in d) {
-            // copy file attributes
-            var file_attr_map = new Map();
-            for (var key in d[image_id].file_attributes) {
-                file_attr_map.set(key, d[image_id].file_attributes[key]);
-            }
-
-            var prefix_str = d[image_id].filename;
-            prefix_str += "," + d[image_id].size;
-            prefix_str += "," + attr_map_to_str( file_attr_map );
+            var prefix = d[image_id].filename;
+            prefix += "," + d[image_id].size;
 
             // copy regions
             var regions = d[image_id].regions;
@@ -1844,33 +1836,29 @@ function download_localStorage_data(type) {
             for (var i in regions) {
                 region_count += 1;
             }
-            
-            for (var i in regions) {
-                var region_shape_attr_str = region_count + ',' + i + ',';
-                
-                var regioni = new ImageRegion();
-                for (var key in regions[i].shape_attributes) {
-                    regioni.shape_attributes.set(key, regions[i].shape_attributes[key]);
+
+            if (region_count !=0) {
+                for (var i=0; i<region_count; ++i) {
+                    var sdata = regions.length + ',' + i + ',';
+                    sdata += regions[i].shape_attributes['x'] + ',';
+                    sdata += regions[i].shape_attributes['y'] + ',';
+                    sdata += regions[i].shape_attributes['width'] + ',';
+                    sdata += regions[i].shape_attributes['height'];
+
+                    var rdata = regions[i].region_attributes[VIA_FACE_LABEL_ATTR_NAME];
+                    
+                    csvdata.push('\n' + prefix + ',' + sdata + ',' + '"' + rdata + '"');
                 }
-                for (var key in regions[i].region_attributes) {
-                    regioni.region_attributes.set(key, regions[i].region_attributes[key]);
-                }
-                region_shape_attr_str += attr_map_to_str( regioni.shape_attributes );
-                var region_attr_str = attr_map_to_str( regioni.region_attributes );
-                csvdata.push('\n' + prefix_str + ',' + region_shape_attr_str + ',' + region_attr_str);
             }
         }
-
         var localStorage_data_blob = new Blob( csvdata,
                                                {type: 'text/csv;charset=utf-8'});
 
         save_data_to_local_file(localStorage_data_blob, 'via_region_data.csv');
-
         break;
     case 'json':
         var localStorage_data_blob = new Blob( [localStorage.getItem('_via_images')],
                                                {type: 'text/json;charset=utf-8'});
-
         save_data_to_local_file(localStorage_data_blob, 'via_region_data.json');
         break;
     }
