@@ -849,6 +849,11 @@ _via_canvas.addEventListener('mousedown', function(e) {
                 }
             }
         }
+    } else {
+        if ( region_id == -1 ) {
+            // this is a bounding box drawing event
+            _via_is_user_drawing_region = true;
+        }
     }
     e.preventDefault();
 }, false);

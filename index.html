@@ -60,7 +60,7 @@
       display: table;
       text-align: center;
       }
-
+      
       #navbar {
       position: relative;
       top: 0;
@@ -174,26 +174,7 @@
       text-overflow: ellipsis;
       }
 
-      /* Toolbar to select region shape */
-      .region_shape {
-      display: inline-block;
-      stroke: #333333;
-      fill: #cccccc;
-      background-color: #ffffff;
-      padding: 0 0.5em;
-      }
-      .region_shape:hover {
-      fill: #ff0000;
-      cursor: pointer;
-      }
-      .region_shape_selected {
-      background-color: #e5e5e5;
-      }
-      .region_shape_selected:hover {
-      fill: #cccccc;
-      }
-      
-      
+      /* status message panel at bottom of page */
       #message_panel {
       position: fixed;
       left: 0;
@@ -219,11 +200,13 @@
       position: absolute;
       z-index: -1;
       }
+
       /* panel that contains the canvas */
       #image_panel {
       display: inline-block;
       margin: auto;
       }
+      
       .action_text_link {
       background-color: #aaeeff;
       color: #000000;
@@ -247,7 +230,7 @@
       left: 6em;
       }
 
-      /* loaded image list */
+      /* loaded image list panel that pop's up on right hand side*/
       #loaded_img_list_panel {
       height: 92%;
       width: 0;
@@ -289,52 +272,6 @@
       border-top: 4px solid #000000;
       padding-bottom: 2em;
       }
-      #attributes_input_panel .title {
-      font-family: Sans;
-      font-size: large;
-      padding-top: 1em;
-      padding-bottom: 0.2em;
-      padding-left: 0.8em;
-      padding-right: 1em;
-      }
-
-      #attributes_input_panel table {
-      border-collapse: collapse;
-      table-layout: fixed;
-      /*width: 100%;*/
-      font-size: small;
-      margin: 1em;
-      }
-
-      #attributes_input_panel td {
-      border: 1px solid #e6e6e6;
-      padding: 0 0.1em;
-      margin: 0;
-      height: 1em;
-      }
-      #attributes_input_panel tr:first-child td, #attributes_input_panel td:first-child {
-      padding: 0 1em;
-      text-align: center;
-      }
-      #attributes_input_panel input {
-      border: none;
-      padding: 0;
-      margin: 0;
-      display: table-cell;
-      width: 100%;
-      height: 1.4em;
-      font-family: Mono;
-      font-size: small;
-      }
-      #attributes_input_panel input:hover {
-      background-color: #e6e6e6;
-      }
-      #attributes_input_panel input:focus {
-      background-color: #e6e6e6;
-      }
-      #attributes_input_panel input:not(:focus) {
-      text-align: center;
-      }
       #panel_close_button {
       display: inline-block;
       color: #808080;
@@ -375,57 +312,12 @@
     <!-- Start: Definition SVG for icons -->
     <svg style="position: absolute; width: 0; height: 0; overflow: hidden;" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
       <defs>
-        <symbol id="via_logo">
-          <title>VGG Image Annotator Logo</title>
-          <rect width="38" height="22" x="20" y="-50" transform="matrix(0,1,-1,0,0,0)" />
-          <rect width="38" height="22" x="12" y="-36" transform="matrix(0,1,-1,0,0,0)" />
-          <rect width="38" height="22" x="6" y="-45" transform="matrix(0,1,-1,0,0,0)" />
-        </symbol>
-
         <symbol id="icon_img_list">
           <title>Show image list</title>
           <rect x="2" y="10" width="30" height="2"/>
           <rect x="2" y="20" width="30" height="2"/>
           <rect x="2" y="30" width="30" height="2"/>
-        </symbol>
-        <symbol id="icon_plus">
-          <title>Plus</title>
-          <path d="M31 12h-11v-11c0-0.552-0.448-1-1-1h-6c-0.552 0-1 0.448-1 1v11h-11c-0.552 0-1 0.448-1 1v6c0 0.552 0.448 1 1 1h11v11c0 0.552 0.448 1 1 1h6c0.552 0 1-0.448 1-1v-11h11c0.552 0 1-0.448 1-1v-6c0-0.552-0.448-1-1-1z"></path>
-        </symbol>
-        <symbol id="icon_import">
-          <title>Import</title>
-          <path d="M16 31l15-15h-9v-16h-12v16h-9z"></path>
-        </symbol>
-
-        <symbol id="shape_rectangle">
-          <title>Rectangular region shape</title>
-          <rect width="20" height="12" x="6" y="10" />
-        </symbol>
-        <symbol id="shape_circle">
-          <title>Circular region shape</title>
-          <circle r="10" cx="16" cy="16" />
-        </symbol>
-        <symbol id="shape_ellipse">
-          <title>Elliptical region shape</title>
-          <ellipse rx="12" ry="8" cx="16" cy="16" />
-        </symbol>
-        <symbol id="shape_polygon">
-          <title>Polyline region shape</title>
-          <path d="M 15.25,2.2372 3.625,11.6122 6,29.9872 l 20.75,-9.625 2.375,-14.75 z" />
-        </symbol>
-
-        <symbol id="icon_resize" viewBox="0 0 32 32">
-          <title>Expand/Contract</title>
-          <path class="path1" d="M30 0h2v16h-2v-16z"></path>
-          <path class="path2" d="M0 16h2v16h-2v-16z"></path>
-          <path class="path3" d="M10 22h22v4h-22v5l-7-7 7-7v5z"></path>
-          <path class="path4" d="M22 10h-22v-4h22v-5l7 7-7 7z"></path>
-        </symbol>
-        <symbol id="icon_table" viewBox="0 0 32 32">
-          <title>Table</title>
-          <path class="path1" d="M0 2v28h32v-28h-32zM12 20v-6h8v6h-8zM20 22v6h-8v-6h8zM20 6v6h-8v-6h8zM10 6v6h-8v-6h8zM2 14h8v6h-8v-6zM22 14h8v6h-8v-6zM22 12v-6h8v6h-8zM2 22h8v6h-8v-6zM22 28v-6h8v6h-8z"></path>
-        </symbol>
-        
+        </symbol>        
       </defs>
     </svg>
     <!-- End: Define SVG for icons -->
