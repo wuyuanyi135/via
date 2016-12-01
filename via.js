@@ -192,11 +192,11 @@ function load_images(type) {
         invisible_file_input.accept='.jpg,.jpeg,.png,.bmp';
         switch(type) {
         case 'image':
-            invisible_file_input.onchange = upload_local_images;
+            invisible_file_input.onchange = store_ref_to_local_images;
             invisible_file_input.click();
             break;
         case 'face_label':
-            invisible_file_input.onchange = upload_local_face_labels;
+            invisible_file_input.onchange = load_face_label_images;
             invisible_file_input.click();
             break;
         }       
@@ -249,7 +249,7 @@ function show_getting_started_panel() {
 //
 // Local file uploaders
 //
-function upload_local_images(event) {
+function store_ref_to_local_images(event) {
     var user_selected_images = event.target.files;
     var original_image_count = _via_images_count;
 
@@ -304,7 +304,7 @@ function upload_local_images(event) {
     }
 }
 
-function upload_local_face_labels(event) {
+function load_face_label_images(event) {
     var selected_files = event.target.files;
     for (var i=0; i<selected_files.length; ++i) {
         var file = selected_files[i];
@@ -312,13 +312,29 @@ function upload_local_face_labels(event) {
 	
         if (file.type.includes('image/') &&
             size < VIA_FACE_LABEL_MAX_SIZE_KB) {
-            load_local_image(file);
+            set_face_label_image(file, update_attributes_input_panel);
         } else {
-            show_message('Discarded face label images  > ' + VIA_FACE_LABEL_MAX_SIZE_KB + 'KB',
-			 VIA_THEME_MESSAGE_TIMEOUT_MS);
+            show_message('Discarded face label images  > ' +
+			 VIA_FACE_LABEL_MAX_SIZE_KB + 'KB');
         }
     }
-    toggle_attributes_input_panel();
+    show_attributes_input_panel();
+}
+
+function set_face_label_image(file, callback_function) {
+    var filename = file.name.split('.');
+    var filename = filename[0]; // remove extension
+    var fileparts = filename.split('_');
+    var file_id = parseInt(fileparts[0]);
+    fileparts.splice(0, 1); // remove file id
+    var img_reader = new FileReader();
+
+    img_reader.addEventListener( "load", function() {
+        _via_face_label_list[file_id] = fileparts.join(' ');
+        _via_face_label_img_list[file_id] = img_reader.result;
+        callback_function();
+    });
+    img_reader.readAsDataURL( file );
 }
 
 //
@@ -495,22 +511,6 @@ function load_text_file(text_file, callback_function) {
         }, false);
         text_reader.readAsText(text_file);
     }
-}
-
-function load_local_image(file, callback_function) {
-    var filename = file.name.split('.');
-    var filename = filename[0]; // remove extension
-    var fileparts = filename.split('_');
-    var file_id = parseInt(fileparts[0]);
-    fileparts.splice(0, 1); // remove file id
-    var img_reader = new FileReader();
-
-    img_reader.addEventListener( "load", function() {
-        _via_face_label_list[file_id] = fileparts.join(' ');
-        _via_face_label_img_list[file_id] = img_reader.result;
-        update_attributes_input_panel();
-    });
-    img_reader.readAsDataURL( file );
 }
 
 //
@@ -1863,16 +1863,22 @@ function download_localStorage_data(type) {
 //
 // Handlers for attributes input panel (spreadsheet like user input panel)
 //
-
 function toggle_attributes_input_panel() {
     if (_via_is_attributes_input_panel_visible) {
-        attributes_input_panel.style.display = 'none';
-        _via_is_attributes_input_panel_visible = false;
+	hide_attributes_input_panel();
     } else {
-        _via_is_attributes_input_panel_visible = true;
-        update_attributes_input_panel();        
-        attributes_input_panel.style.display = 'block';
+	show_attributes_input_panel();
     }
+}
+function hide_attributes_input_panel() {
+    attributes_input_panel.style.display = 'none';
+    _via_is_attributes_input_panel_visible = false;
+
+}
+function show_attributes_input_panel() {
+    _via_is_attributes_input_panel_visible = true;
+    update_attributes_input_panel();
+    attributes_input_panel.style.display = 'block';
 }
 
 function update_attributes_input_panel() {
