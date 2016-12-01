@@ -318,6 +318,7 @@ function upload_local_face_labels(event) {
 			 VIA_THEME_MESSAGE_TIMEOUT_MS);
         }
     }
+    toggle_attributes_input_panel();
 }
 
 //
@@ -348,7 +349,6 @@ function import_region_attributes_from_csv(data) {
     }
 
     _via_reload_img_table = true;
-    show_region_attributes_info();
     show_message('Imported ' + attributes_import_count + ' attributes from CSV file',
 		 VIA_THEME_MESSAGE_TIMEOUT_MS);
     save_current_data_to_browser_cache();
@@ -663,11 +663,23 @@ function show_image(image_index) {
                 _via_image_id = img_id;
                 _via_image_index = image_index;
                 _via_current_image_filename = img_filename;
+
+                _via_click_x0 = 0; _via_click_y0 = 0;
+                _via_click_x1 = 0; _via_click_y1 = 0;
+		_via_is_user_drawing_region = false;
+                _via_is_window_resized = false;		
+		_via_is_user_resizing_region = false;
+		_via_is_user_moving_region = false;
+		_via_is_all_region_selected = false;
+		_via_is_canvas_zoomed = false;
+		_via_is_region_selected = false;
+		_via_user_sel_region_id = -1;
+		_via_canvas.style.cursor = "default";
+		
                 _via_current_image_loaded = true;
-                _via_is_loading_current_image = false;
+		_via_is_loading_current_image = false;
                 
                 // retrive image panel dim. to stretch _via_canvas to fit panel
-                //main_content_width = 0.9*image_panel.offsetWidth;
                 canvas_panel_width = document.documentElement.clientWidth - 320;
                 canvas_panel_height = document.documentElement.clientHeight - 2.2*navbar_panel.offsetHeight;
                 
@@ -696,17 +708,6 @@ function show_image(image_index) {
                 // set the canvas size to match that of the image
                 _via_canvas.height = _via_canvas_height;
                 _via_canvas.width = _via_canvas_width;
-                //console.log("Canvas = " + _via_canvas.width + "," + _via_canvas.height);
-                
-                _via_click_x0 = 0; _via_click_y0 = 0;
-                _via_click_x1 = 0; _via_click_y1 = 0;
-                _via_is_user_drawing_region = false;
-                _via_is_window_resized = false;
-                _via_is_user_resizing_region = false;
-                _via_is_user_moving_region = false;
-                _via_is_user_drawing_polygon = false;
-                _via_is_region_selected = false;
-                _via_user_sel_region_id = -1;
                 
                 clear_image_display_area();
                 _via_canvas.style.display = "inline";
@@ -726,10 +727,6 @@ function show_image(image_index) {
 
                 // update the info panel
                 show_filename_info();
-                show_region_attributes_info();
-                show_region_shape_info();
-                
-                //show_message("Loaded image " + img_filename + " ... ", 5000);
             });
             _via_current_image.src = img_reader.result;
         }, false);
@@ -801,40 +798,16 @@ function delete_selected_regions() {
 
     _via_is_all_region_selected = false;
     _via_is_region_selected = false;
-    _via_user_sel_region_id = -1;
-    
+    _via_user_sel_region_id = -1;   
     _via_redraw_canvas();
     _via_canvas.focus();
-    show_region_shape_info();
-
     show_message('Deleted ' + del_region_count + ' selected regions');
-
     save_current_data_to_browser_cache();
 }
 
 //
 // UI Control Elements (buttons, etc)
 //
-
-// updates currently selected region shape
-function select_region_shape(sel_shape_name) {
-    for (var shape_name in VIA_REGION_SHAPE) {
-        var ui_element = document.getElementById('region_shape_' + VIA_REGION_SHAPE[shape_name]);
-        ui_element.classList.remove('region_shape_selected');
-    }
-
-    _via_current_shape = sel_shape_name;
-    var ui_element = document.getElementById('region_shape_' + _via_current_shape);
-    ui_element.classList.add('region_shape_selected');
-
-    if ( _via_current_shape != VIA_REGION_SHAPE.POLYGON ) {
-        _via_is_user_drawing_polygon = false;
-        _via_current_polygon_region_id = -1;
-        show_message('Press single click and drag mouse to draw ' + _via_current_shape + ' region', VIA_THEME_MESSAGE_TIMEOUT_MS);
-    } else {
-        show_message('Press single click to define polygon vertices. Note: in Polygon drawing mode, single click cannot be used to un-select regions');
-    }
-}
 
 // enter annotation mode on double click
 _via_canvas.addEventListener('dblclick', function(e) {
@@ -876,20 +849,12 @@ _via_canvas.addEventListener('mousedown', function(e) {
                 }
             }
         }
-    } else {
-        if ( region_id == -1 ) {
-            // mouse was clicked outside a region
-            if (_via_current_shape != VIA_REGION_SHAPE.POLYGON) {
-                // this is a bounding box drawing event
-                _via_is_user_drawing_region = true;
-            }
-        }
     }
     e.preventDefault();
 }, false);
 
 // implements the following functionalities:
-//  - new region drawing (including polygon)
+//  - new region drawing
 //  - moving/resizing/select/unselect existing region
 _via_canvas.addEventListener('mouseup', function(e) {
     _via_click_x1 = e.offsetX; _via_click_y1 = e.offsetY;
@@ -994,16 +959,11 @@ _via_canvas.addEventListener('mouseup', function(e) {
             _via_canvas_regions[region_id].is_user_selected = true;
 
             show_message('Region selected. Click and drag to move or resize the region', VIA_THEME_MESSAGE_TIMEOUT_MS);
-            show_region_attributes_info();
-            show_region_shape_info();
         } else {
             if ( _via_is_user_drawing_region ) {
                 // clear all region selection
                 _via_is_user_drawing_region = false;
                 toggle_all_regions_selection(false);
-                
-                show_region_attributes_info();
-                show_region_shape_info();
             }
         }
         _via_redraw_canvas();
@@ -1071,9 +1031,6 @@ _via_canvas.addEventListener('mouseup', function(e) {
 
         _via_redraw_canvas();
         _via_canvas.focus();
-        show_region_attributes_info();
-        show_region_shape_info();
-
         save_current_data_to_browser_cache();
         return;
     }    
@@ -1219,18 +1176,6 @@ _via_canvas.addEventListener('mousemove', function(e) {
                               attr.get('height'),
                               true);
         _via_canvas.focus();    
-    }
-
-    if ( _via_is_user_drawing_polygon ) {
-        _via_redraw_canvas();
-        var attr = _via_canvas_regions[_via_current_polygon_region_id].shape_attributes;
-        var all_points_x = attr.get('all_points_x');
-        var all_points_y = attr.get('all_points_y');
-        var npts = all_points_x.length;
-
-        var line_x = [all_points_x.slice(npts-1), _via_current_x];
-        var line_y = [all_points_y.slice(npts-1), _via_current_y];
-        _via_draw_polygon_region(line_x, line_y, false);
     }
 });
 
@@ -1469,7 +1414,8 @@ function is_inside_region(px, py) {
 }
 
 function is_on_region_corner(px, py) {
-    var _via_region_edge = [-1, -1]; // region_id, corner_id [top-left=1,top-right=2,bottom-right=3,bottom-left=4]
+    // region_id, corner_id [top-left=1,top-right=2,bottom-right=3,bottom-left=4]
+    var _via_region_edge = [-1, -1];
     
     for (var i=0; i < _via_canvas_regions.length; ++i) {
         var attr = _via_canvas_regions[i].shape_attributes;
@@ -1531,48 +1477,38 @@ function is_inside_rect(x, y, w, h, px, py) {
 
 function update_ui_components() {
     if ( !_via_is_window_resized && _via_current_image_loaded ) {
-        show_message("Resizing window ...", VIA_THEME_MESSAGE_TIMEOUT_MS);
+        show_message("Resizing window ...");
         _via_is_window_resized = true;
         show_image(_via_image_index);
-
         reset_zoom_level();
     }
 }
 
 
 window.addEventListener("keydown", function(e) {
-    // user commands
+    // commands invoked by pressing Ctrl + ?
     if ( e.ctrlKey ) {
-        if ( e.key == 's' ) { // Ctrl + s
+	switch(e.key) {
+	case 's':
             download_all_region_data('csv');
-            e.preventDefault();
-            return;
-        }
-
-        if ( e.key == 'i' ) { // Ctrl + i
+	    e.preventDefault();
+	    break;
+	case 'i':
             upload_region_data_file();
-            e.preventDefault();
-            return;
-        }
-
-        if ( e.key == 'o' ) { // Ctrl + o
+	    e.preventDefault();
+	    break;
+	case 'o':
             load_images('image');
-            e.preventDefault();
-            return;
-        }
-
-        if ( e.key == 'a' ) { // Ctrl + a
+	    e.preventDefault();
+	    break;
+	case 'a':
             toggle_all_regions_selection(true);
             _via_is_all_region_selected = true;
-            _via_is_region_selected = false;
+	    update_attributes_input_panel();
             _via_redraw_canvas();
-            update_attributes_input_panel();
-
-            e.preventDefault();
-            return;
-        }
-
-        if ( e.key == 'c' ) { // Ctrl + c
+	    e.preventDefault();
+	    break;
+	case 'c':
             _via_copied_image_regions.splice(0);
             _via_copied_canvas_regions.splice(0);
             for (var i=0; i<_via_images[_via_image_id].regions.length; ++i) {
@@ -1583,33 +1519,34 @@ window.addEventListener("keydown", function(e) {
                     _via_copied_canvas_regions.push( clone_image_region(canvas_region) );
                 }
             }
-            show_message('Copied ' + _via_copied_image_regions.length + ' selected regions. Press Ctrl + v to paste', VIA_THEME_MESSAGE_TIMEOUT_MS);
-            e.preventDefault();
-            return;
-        }
+            show_message('Copied ' + _via_copied_image_regions.length + ' selected regions. ' +
+			 'Press Ctrl + v to paste');
+	    e.preventDefault();
+	    break;
 
-        if ( e.key == 'v' ) { // Ctrl + v
+	case 'v':
             for (var i=0; i<_via_copied_image_regions.length; ++i) {
                 _via_images[_via_image_id].regions.push( _via_copied_image_regions[i] );
                 _via_canvas_regions.push( _via_copied_canvas_regions[i] );
             }
-            show_message('Pasted ' + _via_copied_image_regions.length + ' regions', VIA_THEME_MESSAGE_TIMEOUT_MS);
-            e.preventDefault();
+            show_message('Pasted ' + _via_copied_image_regions.length + ' regions');
             _via_redraw_canvas();
-            return;
-        }
+	    _via_canvas.focus();
+	    e.preventDefault();
+	    break;
 
-        if ( e.key == 'f' ) { // f
+	case 'f':
             load_images('face_label');
-            e.preventDefault();
-            return;
+	    e.preventDefault();
+	    break;
         }
-
-
+        return;
     }
 
-    if ( (e.altKey || e.metaKey) ) {
-        if( e.key == 'd' ) { // Alt + d
+    // commands invoked by pressing Alt + ?
+    if (e.altKey) {
+	switch(e.key) {
+	case 'd':
             delete_selected_regions();
             update_attributes_input_panel();
             _via_reload_img_table = true;       
@@ -1617,13 +1554,14 @@ window.addEventListener("keydown", function(e) {
             _via_redraw_canvas();
             _via_canvas.focus();
             e.preventDefault();
-            return;
-        }
+	    break;
+	}
+	return;
     }
-    
-    // zoom in/out functionality
-    if (e.key == '+') {
-        // zoom in
+
+    // other commands invoked by pressing a single key
+    switch(e.key) {
+    case '+': // zoom in
         if (_via_canvas_zoom_level_index == (VIA_CANVAS_ZOOM_LEVELS.length-1)) {
             show_message('Further zoom-in not possible', VIA_THEME_MESSAGE_TIMEOUT_MS);
         } else {
@@ -1642,11 +1580,9 @@ window.addEventListener("keydown", function(e) {
             _via_canvas.focus();
             show_message('Zoomed in to level ' + zoom_scale, VIA_THEME_MESSAGE_TIMEOUT_MS);
         }
-        return;         
-    }
-
-    if (e.key == '-') {
-        // zoom out
+	e.preventDefault();
+	break;
+    case '-': // zoom out
         if (_via_canvas_zoom_level_index == 0) {
             show_message('Further zoom-out not possible', VIA_THEME_MESSAGE_TIMEOUT_MS);
         } else {
@@ -1665,107 +1601,68 @@ window.addEventListener("keydown", function(e) {
             _via_canvas.focus();
             show_message('Zoomed out to level ' + zoom_scale, VIA_THEME_MESSAGE_TIMEOUT_MS);
         }
-        return;
-    }
-    if ( e.key == '0' ) { // 0
-        // reset the zoom level
+	e.preventDefault();
+	break;
+    case '0': // reset the zoom level
         reset_zoom_level();
         show_message('Zoom reset', VIA_THEME_MESSAGE_TIMEOUT_MS);
-        return;
-    }
-
-    if ( e.which == 112 ) { // F1
-        show_getting_started_panel();
-        e.preventDefault();
-        return;
-    }
-    
-    if (e.which == 78 || e.which == 39) { // n or right arrow
+	e.preventDefault();
+	break;
+    case "n":
+    case 'ArrowRight':
         move_to_next_image();
         e.preventDefault();
-        return;
-    }
-    if (e.which == 80 || e.which == 37) { // n or right arrow
+	break;
+    case 'p':
+    case 'ArrowLeft':
         move_to_prev_image();
         e.preventDefault();
-        return;
-    }
-
-    if (e.key == 'a') { // a
+	break;
+    case 'Backspace':
+    case 'Delete':
+	delete_selected_regions();
+        update_attributes_input_panel();
+        _via_reload_img_table = true;       
+        show_img_list();
+        _via_redraw_canvas();
+        _via_canvas.focus();
+        e.preventDefault();
+	break;
+    case 'a':
         toggle_attributes_input_panel();
-        return;
-    }
-    
-    if ( e.key == 'l' ) { // l
+        e.preventDefault();
+	break;
+
+    case 'l':
         toggle_img_list();
         e.preventDefault();
-        return;
-    }
-
-    if ( e.which == 27 ) { // Esc
-        if ( _via_is_user_resizing_region ) {
-            // cancel region resizing action
-            _via_is_user_resizing_region = false;
+        break;
+    case 'Escape':
+        if (_via_is_all_region_selected) {
+            toggle_all_regions_selection(false);
         }
-        
         if ( _via_is_region_selected ) {
-            // clear all region selections
             _via_is_region_selected = false;
             _via_canvas_regions[_via_user_sel_region_id].is_user_selected = false;
             _via_user_sel_region_id = -1;
         }
-
-        if (_via_is_all_region_selected) {
-            toggle_all_regions_selection(false);
-        }
-
-        if ( _via_is_user_drawing_polygon ) {
-            _via_is_user_drawing_polygon = false;
-            _via_canvas_regions.splice(_via_current_polygon_region_id, 1);
-        }
-
-        if ( _via_is_user_drawing_region ) {
-            _via_is_user_drawing_region = false;
-        }
-
-        if ( _via_is_user_resizing_region ) {
-            _via_is_user_resizing_region = false
-        }
-
-        if ( _via_is_user_moving_region ) {
-            _via_is_user_moving_region = false
-        }
-        
+	_via_is_user_drawing_region = false;
+	_via_is_user_resizing_region = false;
+	_via_is_user_moving_region = false;
         e.preventDefault();
         _via_redraw_canvas();
         _via_canvas.focus();
-        return;
+	break;
+    case 'F1':
+	show_getting_started_panel();
+	e.preventDefault();
+	break;
     }
-
-    if ( e.which == 121 ) { // F10 key used for debugging
-        print_current_state_vars();
-        print_current_image_data();
-        e.preventDefault();
-        return;
-    }
-    if (e.which == 113) { // F2 for about
-        show_about_panel();
-        e.preventDefault();
-        return;
-    }
-    
 });
 
 function move_to_prev_image() {
     if (_via_images_count > 0) {
-        _via_is_region_selected = false;
-        _via_user_sel_region_id = -1;
-        _via_is_user_resizing_region = false;
-        _via_is_user_moving_region = false;
-        _via_is_all_region_selected = false;
-        _via_is_canvas_zoomed = false;
         _via_canvas.style.cursor = "default";
-        
         if ( _via_image_index == 0 ) {   
             show_image(_via_images_count - 1);
         } else {
@@ -1776,14 +1673,7 @@ function move_to_prev_image() {
 
 function move_to_next_image() {
     if (_via_images_count > 0) {
-        _via_is_region_selected = false;
-        _via_user_sel_region_id = -1;
-        _via_is_user_resizing_region = false;
-        _via_is_user_moving_region = false;
-        _via_is_all_region_selected = false;
-        _via_is_canvas_zoomed = false;
-        _via_canvas.style.cursor = "default";
-        
+               
         if ( _via_image_index == (_via_images_count-1) ) {   
             show_image(0);
         } else {
@@ -1811,62 +1701,18 @@ function reset_zoom_level() {
 // Update of user interface elements
 // Communication from javascript to UI
 //
-function show_message(msg, timeout_ms) {
+function show_message(msg, t) {
     if ( _via_message_clear_timer ) {
         clearTimeout(_via_message_clear_timer); // stop any previous timeouts
     }
-    
+    var timeout = t;
+    if (typeof t === 'undefined') {
+	timeout = VIA_THEME_MESSAGE_TIMEOUT_MS;
+    }
     document.getElementById('message_panel').innerHTML = msg;
-
-    if ( timeout_ms != undefined ) {
-        _via_message_clear_timer = setTimeout( function() {
-            document.getElementById('message_panel').innerHTML = ' ';
-        }, timeout_ms);
-    }
-    return;    
-}
-
-function toggle_message_panel() {
-    switch(message_panel.style.display) {
-    default:
-    case 'block':
-        message_panel.style.display = 'none';
-        break;
-        
-    case 'none':
-        message_panel.style.display = 'block';
-        break;
-    }
-}
-
-function show_all_info() {
-    show_filename_info();
-    show_region_info();
-    show_annotation_info();
-}
-
-function show_region_attributes_info() {
-    if ( _via_user_sel_region_id != -1 ) {
-        var region_set_attr_count = _via_images[_via_image_id].regions[_via_user_sel_region_id].region_attributes.size;
-        var region_attr_count = _via_region_attributes.size;
-
-        var missing_attr_count = region_attr_count - region_set_attr_count;
-        if (missing_attr_count) {
-            document.getElementById("info_attribute").innerHTML = region_set_attr_count + ' ( ' + (region_attr_count - region_set_attr_count) + ' remaining )';
-        } else {
-            document.getElementById("info_attribute").innerHTML = region_set_attr_count;
-        }
-    } else {
-        document.getElementById("info_attribute").innerHTML = "";
-    }
-}
-
-function show_region_shape_info() {
-    if ( _via_current_image_loaded ) {
-        document.getElementById("info_region").innerHTML = _via_images[_via_image_id].regions.length;
-    } else {
-        document.getElementById("info_region").innerHTML = "";
-    }
+    _via_message_clear_timer = setTimeout( function() {
+        document.getElementById('message_panel').innerHTML = ' ';
+    }, timeout);
 }
 
 function show_filename_info() {
@@ -1960,7 +1806,6 @@ function download_localStorage_data(type) {
     switch(type) {
     case 'csv':
         var d = JSON.parse( localStorage.getItem('_via_images') );
-
         var csvdata = [];
         var csvheader = "#filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes";
         csvdata.push(csvheader);
@@ -1995,7 +1840,6 @@ function download_localStorage_data(type) {
                 }
                 region_shape_attr_str += attr_map_to_str( regioni.shape_attributes );
                 var region_attr_str = attr_map_to_str( regioni.region_attributes );
-                console.log('\n' + prefix_str + ',' + region_shape_attr_str + ',' + region_attr_str);
                 csvdata.push('\n' + prefix_str + ',' + region_shape_attr_str + ',' + region_attr_str);
             }
         }
@@ -2033,8 +1877,12 @@ function toggle_attributes_input_panel() {
 
 function update_attributes_input_panel() {
     if (_via_face_label_list.length == 0) {
-        var msg = '<div style="margin: auto; text-align: center; width: 40%;padding: 2em 0;">Import a list of representative face images using [<a href="" onclick="">Face Labels &rarr; Import from Images</a>]. Representative images correspond to facial image of individuals that you wish to locate and  annotate in several images.</div>';
-        face_label_panel.innerHTML = msg;
+	var htmlmsg = '<div style="margin: auto; text-align: center; width: 40%;padding: 2em 0;">' +
+	    'Import a list of representative face images using ' +
+	    '[<a href="" onclick="">Face Labels &rarr; Import from Images</a>]. ' +
+	    'Representative images correspond to facial image of individuals that ' +
+	    'you wish to locate and  annotate in several images.</div>';
+        face_label_panel.innerHTML = htmlmsg;
         return;
     }
     
@@ -2099,57 +1947,5 @@ function set_face_label(value) {
         show_img_list();
         _via_redraw_canvas();
         _via_canvas.focus();
-    }
-}
-
-//
-// used for debugging
-//
-function print_current_state_vars() {
-    //console.log(localStorage);
-    console.log('\n_via_is_user_drawing_region'+_via_is_user_drawing_region+
-                '\n_via_current_image_loaded'+_via_current_image_loaded+
-                '\n_via_is_window_resized'+_via_is_window_resized+
-                '\n_via_is_user_resizing_region'+_via_is_user_resizing_region+
-                '\n_via_is_user_moving_region'+_via_is_user_moving_region+
-                '\n_via_is_user_drawing_polygon'+_via_is_user_drawing_polygon+
-                '\n_via_is_region_selected'+_via_is_region_selected);
-}
-
-function print_current_image_data() {
-    console.log(_via_images);
-    for ( var image_id in _via_images) {
-        var fn = _via_images[image_id].filename;
-        var logstr = [];
-        logstr.push("[" + fn + "] : ");
-
-        var img_regions = _via_images[image_id].regions;
-        for ( var i=0; i<img_regions.length; ++i) {
-            var attr = img_regions[i].shape_attributes;
-            var img_region_str = '\n\t_via_images[i].regions.shape_attributes = [';
-            for ( var key of attr.keys() ) {
-                img_region_str += key + ':' + attr.get(key) + ';';
-            }
-            logstr.push(img_region_str + ']');
-
-            var attr = img_regions[i].region_attributes;
-            var img_region_str = '\n\t_via_images[i].regions.region_attributes = [';
-            for ( var key of attr.keys() ) {
-                img_region_str += key + ':' + attr.get(key) + ';';
-            }
-            logstr.push(img_region_str + ']');
-        }
-
-        if ( _via_image_id == image_id ) {
-            for ( var i=0; i<_via_canvas_regions.length; ++i) {
-                var canvas_region_str = '\n\t_via_canvas_regions = [';
-                for ( var key of _via_canvas_regions[i].shape_attributes.keys() ) {
-                    var value = _via_canvas_regions[i].shape_attributes.get(key);
-                    canvas_region_str += key + ':' + value + ';';
-                }
-                logstr.push(canvas_region_str + ']');
-            }
-        }
-        console.log(logstr.join(''));
     }
 }

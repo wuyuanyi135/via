@@ -464,9 +464,6 @@
         <div id="image_info">
           <div style="display: inline-block; fill: white; stroke: white;" ><a onclick="toggle_img_list()" title="Browse currently loaded images" class="svg_button"><svg width="18" viewBox="0 0 32 32"><use xlink:href="#icon_img_list"></use></svg></a></div>
           <span id="info_current_fileid"></span> <span id="info_current_filename"><span class="action_text_link" onclick="load_images('image')" title="load local images">[click to load images]</span></span>
-
-          <span id="info_region" style="display: none;"></span>
-          <span id="info_attribute" style="display: none;"></span>
         </div>
 
         <input type="file" id="invisible_file_input" multiple name="files[]" style="display:none" onchange="">
@@ -549,8 +546,8 @@
 	    <p>Quick start guide for face annotator:</p>
 	    <p>
 	      <ol>
-		<li>Import the list of representative face images using <span style="cursor: pointer" title="Load face label images" onclick="load_images('face_label')">[Face Labels &rarr; Import from Images</span>]</li>
-		<li><span style="cursor: pointer" title="Load images"onclick="load_images('image')">[Load the images]</span> that you wish to annotate, draw rectangular regions by clicking and dragging the mouse cursor and select a face from the list of representative faces.</li>
+		<li>Import the list of representative face images using <span style="cursor: pointer; color: blue;" title="Load face label images" onclick="load_images('face_label')">[Face Labels &rarr; Import from Images</span>]</li>
+		<li><span style="cursor: pointer; color: blue;" title="Load images" onclick="load_images('image')">[Load the images]</span> that you wish to annotate, draw rectangular regions by clicking and dragging the mouse cursor and select a face from the list of representative faces.</li>
 	      </ol>
 	    </p>
 	    <div id="localStorage_recovery_msg"></div>
