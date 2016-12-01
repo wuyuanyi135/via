@@ -308,14 +308,14 @@ function load_face_label_images(event) {
     var selected_files = event.target.files;
     for (var i=0; i<selected_files.length; ++i) {
         var file = selected_files[i];
-	var size = file.size/1024;
-	
+        var size = file.size/1024;
+        
         if (file.type.includes('image/') &&
             size < VIA_FACE_LABEL_MAX_SIZE_KB) {
             set_face_label_image(file, update_attributes_input_panel);
         } else {
             show_message('Discarded face label images  > ' +
-			 VIA_FACE_LABEL_MAX_SIZE_KB + 'KB');
+                         VIA_FACE_LABEL_MAX_SIZE_KB + 'KB');
         }
     }
     show_attributes_input_panel();
@@ -366,7 +366,7 @@ function import_region_attributes_from_csv(data) {
 
     _via_reload_img_table = true;
     show_message('Imported ' + attributes_import_count + ' attributes from CSV file',
-		 VIA_THEME_MESSAGE_TIMEOUT_MS);
+                 VIA_THEME_MESSAGE_TIMEOUT_MS);
     save_current_data_to_browser_cache();
 }
 
@@ -424,9 +424,9 @@ function import_region_data_from_csv(data) {
         }
     }
     show_message('Imported [' + region_import_count + '] regions ' +
-		 ' and [' + file_attr_count + '] file attributes for ' +
-		 image_count + ' images from CSV file',
-		 VIA_THEME_MESSAGE_TIMEOUT_MS);
+                 ' and [' + file_attr_count + '] file attributes for ' +
+                 image_count + ' images from CSV file',
+                 VIA_THEME_MESSAGE_TIMEOUT_MS);
 
     _via_reload_img_table = true;
     show_image(_via_image_index);
@@ -470,8 +470,8 @@ function import_region_data_from_json(data) {
     }
 
     show_message('Imported [' + region_import_count + '] regions' +
-		 ' and [' + file_attr_count + '] file attributes for ' +
-		 image_count + ' images from JSON file', VIA_THEME_MESSAGE_TIMEOUT_MS);
+                 ' and [' + file_attr_count + '] file attributes for ' +
+                 image_count + ' images from JSON file', VIA_THEME_MESSAGE_TIMEOUT_MS);
     
     _via_reload_img_table = true;
     show_image(_via_image_index);
@@ -520,7 +520,7 @@ function package_region_data(return_type) {
     if( return_type == "csv" ) {
         var csvdata = [];
         var csvheader = '#filename,file_size,face_count,face_id,x,y,width,height,';
-	csvheader += VIA_FACE_LABEL_ATTR_NAME;
+        csvheader += VIA_FACE_LABEL_ATTR_NAME;
         csvdata.push(csvheader);
 
         for ( var image_id in _via_images ) {
@@ -540,8 +540,8 @@ function package_region_data(return_type) {
                     var rdata = regions[i].region_attributes.get(VIA_FACE_LABEL_ATTR_NAME);
                     
                     csvdata.push('\n' + prefix + ',' +
-				 region_shape_attr_str + ',' +
-				 '"' + rdata + '"');
+                                 region_shape_attr_str + ',' +
+                                 '"' + rdata + '"');
                 }
             }
         }
@@ -666,18 +666,18 @@ function show_image(image_index) {
 
                 _via_click_x0 = 0; _via_click_y0 = 0;
                 _via_click_x1 = 0; _via_click_y1 = 0;
-		_via_is_user_drawing_region = false;
-                _via_is_window_resized = false;		
-		_via_is_user_resizing_region = false;
-		_via_is_user_moving_region = false;
-		_via_is_all_region_selected = false;
-		_via_is_canvas_zoomed = false;
-		_via_is_region_selected = false;
-		_via_user_sel_region_id = -1;
-		_via_canvas.style.cursor = "default";
-		
+                _via_is_user_drawing_region = false;
+                _via_is_window_resized = false;         
+                _via_is_user_resizing_region = false;
+                _via_is_user_moving_region = false;
+                _via_is_all_region_selected = false;
+                _via_is_canvas_zoomed = false;
+                _via_is_region_selected = false;
+                _via_user_sel_region_id = -1;
+                _via_canvas.style.cursor = "default";
+                
                 _via_current_image_loaded = true;
-		_via_is_loading_current_image = false;
+                _via_is_loading_current_image = false;
                 
                 // retrive image panel dim. to stretch _via_canvas to fit panel
                 canvas_panel_width = document.documentElement.clientWidth - 320;
@@ -1493,27 +1493,27 @@ function update_ui_components() {
 window.addEventListener("keydown", function(e) {
     // commands invoked by pressing Ctrl + ?
     if ( e.ctrlKey ) {
-	switch(e.key) {
-	case 's':
+        switch(e.key) {
+        case 's':
             download_all_region_data('csv');
-	    e.preventDefault();
-	    break;
-	case 'i':
+            e.preventDefault();
+            break;
+        case 'i':
             upload_region_data_file();
-	    e.preventDefault();
-	    break;
-	case 'o':
+            e.preventDefault();
+            break;
+        case 'o':
             load_images('image');
-	    e.preventDefault();
-	    break;
-	case 'a':
+            e.preventDefault();
+            break;
+        case 'a':
             toggle_all_regions_selection(true);
             _via_is_all_region_selected = true;
-	    update_attributes_input_panel();
+            update_attributes_input_panel();
             _via_redraw_canvas();
-	    e.preventDefault();
-	    break;
-	case 'c':
+            e.preventDefault();
+            break;
+        case 'c':
             _via_copied_image_regions.splice(0);
             _via_copied_canvas_regions.splice(0);
             for (var i=0; i<_via_images[_via_image_id].regions.length; ++i) {
@@ -1525,33 +1525,33 @@ window.addEventListener("keydown", function(e) {
                 }
             }
             show_message('Copied ' + _via_copied_image_regions.length + ' selected regions. ' +
-			 'Press Ctrl + v to paste');
-	    e.preventDefault();
-	    break;
+                         'Press Ctrl + v to paste');
+            e.preventDefault();
+            break;
 
-	case 'v':
+        case 'v':
             for (var i=0; i<_via_copied_image_regions.length; ++i) {
                 _via_images[_via_image_id].regions.push( _via_copied_image_regions[i] );
                 _via_canvas_regions.push( _via_copied_canvas_regions[i] );
             }
             show_message('Pasted ' + _via_copied_image_regions.length + ' regions');
             _via_redraw_canvas();
-	    _via_canvas.focus();
-	    e.preventDefault();
-	    break;
+            _via_canvas.focus();
+            e.preventDefault();
+            break;
 
-	case 'f':
+        case 'f':
             load_images('face_label');
-	    e.preventDefault();
-	    break;
+            e.preventDefault();
+            break;
         }
         return;
     }
 
     // commands invoked by pressing Alt + ?
     if (e.altKey) {
-	switch(e.key) {
-	case 'd':
+        switch(e.key) {
+        case 'd':
             delete_selected_regions();
             update_attributes_input_panel();
             _via_reload_img_table = true;       
@@ -1559,9 +1559,9 @@ window.addEventListener("keydown", function(e) {
             _via_redraw_canvas();
             _via_canvas.focus();
             e.preventDefault();
-	    break;
-	}
-	return;
+            break;
+        }
+        return;
     }
 
     // other commands invoked by pressing a single key
@@ -1585,8 +1585,8 @@ window.addEventListener("keydown", function(e) {
             _via_canvas.focus();
             show_message('Zoomed in to level ' + zoom_scale, VIA_THEME_MESSAGE_TIMEOUT_MS);
         }
-	e.preventDefault();
-	break;
+        e.preventDefault();
+        break;
     case '-': // zoom out
         if (_via_canvas_zoom_level_index == 0) {
             show_message('Further zoom-out not possible', VIA_THEME_MESSAGE_TIMEOUT_MS);
@@ -1606,37 +1606,37 @@ window.addEventListener("keydown", function(e) {
             _via_canvas.focus();
             show_message('Zoomed out to level ' + zoom_scale, VIA_THEME_MESSAGE_TIMEOUT_MS);
         }
-	e.preventDefault();
-	break;
+        e.preventDefault();
+        break;
     case '0': // reset the zoom level
         reset_zoom_level();
         show_message('Zoom reset', VIA_THEME_MESSAGE_TIMEOUT_MS);
-	e.preventDefault();
-	break;
+        e.preventDefault();
+        break;
     case "n":
     case 'ArrowRight':
         move_to_next_image();
         e.preventDefault();
-	break;
+        break;
     case 'p':
     case 'ArrowLeft':
         move_to_prev_image();
         e.preventDefault();
-	break;
+        break;
     case 'Backspace':
     case 'Delete':
-	delete_selected_regions();
+        delete_selected_regions();
         update_attributes_input_panel();
         _via_reload_img_table = true;       
         show_img_list();
         _via_redraw_canvas();
         _via_canvas.focus();
         e.preventDefault();
-	break;
+        break;
     case 'a':
         toggle_attributes_input_panel();
         e.preventDefault();
-	break;
+        break;
 
     case 'l':
         toggle_img_list();
@@ -1651,17 +1651,17 @@ window.addEventListener("keydown", function(e) {
             _via_canvas_regions[_via_user_sel_region_id].is_user_selected = false;
             _via_user_sel_region_id = -1;
         }
-	_via_is_user_drawing_region = false;
-	_via_is_user_resizing_region = false;
-	_via_is_user_moving_region = false;
+        _via_is_user_drawing_region = false;
+        _via_is_user_resizing_region = false;
+        _via_is_user_moving_region = false;
         e.preventDefault();
         _via_redraw_canvas();
         _via_canvas.focus();
-	break;
+        break;
     case 'F1':
-	show_getting_started_panel();
-	e.preventDefault();
-	break;
+        show_getting_started_panel();
+        e.preventDefault();
+        break;
     }
 });
 
@@ -1712,7 +1712,7 @@ function show_message(msg, t) {
     }
     var timeout = t;
     if (typeof t === 'undefined') {
-	timeout = VIA_THEME_MESSAGE_TIMEOUT_MS;
+        timeout = VIA_THEME_MESSAGE_TIMEOUT_MS;
     }
     document.getElementById('message_panel').innerHTML = msg;
     _via_message_clear_timer = setTimeout( function() {
@@ -1870,9 +1870,9 @@ function download_localStorage_data(type) {
 //
 function toggle_attributes_input_panel() {
     if (_via_is_attributes_input_panel_visible) {
-	hide_attributes_input_panel();
+        hide_attributes_input_panel();
     } else {
-	show_attributes_input_panel();
+        show_attributes_input_panel();
     }
 }
 function hide_attributes_input_panel() {
@@ -1888,11 +1888,11 @@ function show_attributes_input_panel() {
 
 function update_attributes_input_panel() {
     if (_via_face_label_list.length == 0) {
-	var htmlmsg = '<div style="margin: auto; text-align: center; width: 40%;padding: 2em 0;">' +
-	    'Import a list of representative face images using ' +
-	    '[<a href="" onclick="">Face Labels &rarr; Import from Images</a>]. ' +
-	    'Representative images correspond to facial image of individuals that ' +
-	    'you wish to locate and  annotate in several images.</div>';
+        var htmlmsg = '<div style="margin: auto; text-align: center; width: 40%;padding: 2em 0;">' +
+            'Import a list of representative face images using ' +
+            '[<a href="" onclick="">Face Labels &rarr; Import from Images</a>]. ' +
+            'Representative images correspond to facial image of individuals that ' +
+            'you wish to locate and  annotate in several images.</div>';
         face_label_panel.innerHTML = htmlmsg;
         return;
     }

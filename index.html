@@ -323,6 +323,7 @@
     <!-- End: Define SVG for icons -->
 
     <div class="wrapper">
+      <!-- Start: navigation bar (present on top) -->
       <div id="navbar">
         <ul> 
           <li><a onclick="show_home_panel()" title="Home">Home</a></li>
@@ -339,15 +340,10 @@
               <a onclick="upload_region_data_file()" title="Import existing region data from CSV or JSON file">Import</a>
             </div>
           </li>
-          <li class="dropdown"><a title="Face Labels" class="drop_menu_item">Face Labels &#9662</a>
-            <div class="dropdown-content">
-              <a onclick="load_images('face_label')" title="Import face labels from images">Import from images</a>
-            </div>
-          </li>
-
+          <li><a onclick="load_images('face_label')" title="Import Face Labels">Import Face Labels</a></li>
           <li class="dropdown"><a onclick="show_about_panel()" title="Help">Help &#9662</a>
             <div class="dropdown-content">
-	      <a onclick="show_getting_started_panel()" title="Getting started guide">Getting started</a>
+              <a onclick="show_getting_started_panel()" title="Getting started guide">Getting started</a>
               <a onclick="show_about_panel()" title="About VGG Image Annotator (VIA)">About VIA</a>
             </div>
           </li>
@@ -359,12 +355,12 @@
         </div>
 
         <input type="file" id="invisible_file_input" multiple name="files[]" style="display:none" onchange="">
-      </div> <!-- end of navbar -->
+      </div>
+      <!-- End: navigation bar (present on top) -->
 
       <div class="main">
+        <!-- Start: information display in the left side bar -->
         <div class="box sidebar" id="info_panel">
-
-          <!-- Show Region and File attributes panel -->
           <div class="title">Face Labels</div>
           <span class="action_text_link" onclick="toggle_attributes_input_panel()" title="Show/Hide attributes">[click to show/hide labels]</span>
           
@@ -391,7 +387,7 @@
                 <td>Ctrl + o</td>
                 <td>Load or add images</td>
               </tr>
-	      <tr>
+              <tr>
                 <td>Ctrl + f</td>
                 <td>Load face labels</td>
               </tr>
@@ -430,41 +426,43 @@
             </table>
           </div>
         </div>
-        
+        <!-- End: information display in the left side bar -->
+
+        <!-- Start: image canvas and other information panels -->
         <div class="box" id="image_panel">
           <canvas id="image_canvas">Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.</canvas>
 
           <div id="start_info_panel" style="width: 40em;">
-	    <p>Quick start guide for face annotator:</p>
-	    <p>
-	      <ol>
-		<li>Import the list of representative face images using <span style="cursor: pointer; color: blue;" title="Load face label images" onclick="load_images('face_label')">[Face Labels &rarr; Import from Images</span>]</li>
-		<li><span style="cursor: pointer; color: blue;" title="Load images" onclick="load_images('image')">[Load the images]</span> that you wish to annotate, draw rectangular regions by clicking and dragging the mouse cursor and select a face from the list of representative faces.</li>
-	      </ol>
-	    </p>
-	    <div id="localStorage_recovery_msg"></div>
+            <p>Quick start guide for face annotator:</p>
+            <p>
+              <ol>
+                <li>Import the list of representative face images using [<span style="cursor: pointer; color: blue;" title="Load face label images" onclick="load_images('face_label')">Import Face Labels</span>]</li>
+                <li><span style="cursor: pointer; color: blue;" title="Load images" onclick="load_images('image')">[Load the images]</span> that you wish to annotate, draw rectangular regions by clicking and dragging the mouse cursor and select a face from the list of representative faces.</li>
+              </ol>
+            </p>
+            <div id="localStorage_recovery_msg"></div>
           </div>
 
           <div id="getting_started_panel" style="width: 40em;">
-	    <p>VGG Face Annotator lets you mark and tag rectangular facial regions in an image.</p>
-	    <h3>Getting started</h3>
-	    <ol>
-	      <li>Import a list of representative face images using [<a href="" onclick="">Face Labels &rarr; Import from Images</a>]. Representative images correspond to facial image of individuals that you wish to locate and  annotate in several images.</li>
-	      <li>Now [<a href="" onclick="load_images('image')">load the images</a>] that you wish to tag with rectangular facial regions.</li>
-	      <li>Press the key <b>n</b> (or <b>p</b>) to move to next (or previous image) and <b>l</b> to show the list of all images.</li>
-	      <li>Click mouse right button and drag to draw a rectangular region around a face in the loaded image. This newly created region is automatically selected. If you have more facial regions, you can continue to draw them.</li>
-	      <li>Press <b>a</b> key to show the face labels panel (if it is hidden). Click on one of the representative images to tag this region. The selection automatically moves to next untagged region (if any).</li>
-	      <li>Clicking on a region selects it allowing you to move, resize or delete them as needed.</li>
-	      <li>Remember to regularly save your work by clicking [Annotation &rarr; Save as CSV].</li>
-	      <li>Next time, to start from where you left, click [Annotation &rarr; Import] and point it to the CSV file saved in Step 7.</li>
-	    </ol>
-	  </div>
-	  
+            <p>VGG Face Annotator lets you mark and tag rectangular facial regions in an image.</p>
+            <h3>Getting started</h3>
+            <ol>
+              <li>Import a list of representative face images using [<a href="" onclick="">Face Labels &rarr; Import from Images</a>]. Representative images correspond to facial image of individuals that you wish to locate and  annotate in several images.</li>
+              <li>Now [<a href="" onclick="load_images('image')">load the images</a>] that you wish to tag with rectangular facial regions.</li>
+              <li>Press the key <b>n</b> (or <b>p</b>) to move to next (or previous image) and <b>l</b> to show the list of all images.</li>
+              <li>Click mouse right button and drag to draw a rectangular region around a face in the loaded image. This newly created region is automatically selected. If you have more facial regions, you can continue to draw them.</li>
+              <li>Press <b>a</b> key to show the face labels panel (if it is hidden). Click on one of the representative images to tag this region. The selection automatically moves to next untagged region (if any).</li>
+              <li>Clicking on a region selects it allowing you to move, resize or delete them as needed.</li>
+              <li>Remember to regularly save your work by clicking [Annotation &rarr; Save as CSV].</li>
+              <li>Next time, to start from where you left, click [Annotation &rarr; Import] and point it to the CSV file saved in Step 7.</li>
+            </ol>
+          </div>
+          
           <div id="img_list_panel"></div>
 
           <div class="" id="about_panel" style="width: 40em;">
             <p>VGG Face Annotator (VFA) lets you mark and tag rectangular facial regions in an image. Such tagged image regions are useful for supervised training of learning algorithms.</p>
-	    <p>VFA is a fork of <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">VGG Image Annotator (VIA)</a> adapted for face annotation. VIA is an <a href="https://gitlab.com/vgg/via/">open source project</a> developed and maintained at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.</p>
+            <p>VFA is a fork of <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">VGG Image Annotator (VIA)</a> adapted for face annotation. VIA is an <a href="https://gitlab.com/vgg/via/">open source project</a> developed and maintained at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.</p>
             <p>
               Features:
             <ul>
@@ -479,11 +477,19 @@
           </div>
           
         </div>
+        <!-- End: image canvas and other information panels -->
+
+        <!-- A panel that pop's up on right hand side and shows the list
+             of currently loaded image
+          -->
         <div id="loaded_img_list_panel"></div>
       </div> <!-- end of main -->
     </div> <!-- end of wrapper -->
+
+    <!-- A panel that pop's up at the bottom to show status messages -->
     <div id="message_panel"></div>
-    
+
+    <!-- A panel containing list of face labels -->
     <div id="attributes_input_panel">
       <span id="panel_close_button" onclick="toggle_attributes_input_panel()">&times</span>
       <div id="face_label_panel"></div>
