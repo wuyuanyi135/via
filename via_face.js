@@ -137,7 +137,7 @@ function main() {
                  'version ' + VIA_VERSION,
                  2*VIA_THEME_MESSAGE_TIMEOUT_MS);
     show_home_panel();
-    start_demo_session(); // defined in via_demo.js
+    //start_demo_session(); // defined in via_demo.js
     
     _via_is_local_storage_available = check_local_storage();
     if (_via_is_local_storage_available) {
@@ -146,7 +146,7 @@ function main() {
         }
     }
     _via_region_attributes.add(VIA_FACE_LABEL_ATTR_NAME);
-    show_attributes_input_panel();
+    //show_attributes_input_panel();
 }
 
 //
@@ -333,22 +333,22 @@ function set_face_label_image(file, callback_function) {
     var file_id = -1;
     
     if (filename.includes('_')) {
-	// filename named according to convention
-	var filename_split = filename.split('_');
-	var file_id = parseInt(filename_split[0]);
-	filename_split.splice(0, 1); // remove file id
-	label = filename_split.join('_');
+        // filename named according to convention
+        var filename_split = filename.split('_');
+        var file_id = parseInt(filename_split[0]);
+        filename_split.splice(0, 1); // remove file id
+        label = filename_split.join('_');
 
-	if (isNaN(file_id)) {
-	    file_id = _via_face_label_list.push(label);
-	    file_id -= 1; // push() returns length, 0 based index
-	} else {
-	    _via_face_label_list[file_id] = label;
-	}
+        if (isNaN(file_id)) {
+            file_id = _via_face_label_list.push(label);
+            file_id -= 1; // push() returns length, 0 based index
+        } else {
+            _via_face_label_list[file_id] = label;
+        }
     } else {
-	label = filename;
-	file_id = _via_face_label_list.push(label);
-	file_id -= 1; // push() returns length, 0 based index
+        label = filename;
+        file_id = _via_face_label_list.push(label);
+        file_id -= 1; // push() returns length, 0 based index
     }
     
     var img_reader = new FileReader();    
@@ -1244,7 +1244,7 @@ function reload_img_table() {
     
     _via_loaded_img_table_html = [];
     _via_loaded_img_table_html.push('<span class="button"' +
-				    ' style="font-size: 2em; float: right;"' + 
+                                    ' style="font-size: 2em; float: right;"' + 
                                     ' onclick="toggle_img_list()">&times</span>');
     _via_loaded_img_table_html.push('<h3>Image List</h3>');
     _via_loaded_img_table_html.push('<ul>');
@@ -1914,7 +1914,7 @@ function update_attributes_input_panel() {
         var htmlmsg = '<div style="margin: auto; text-align: center; width: 40%;padding: 2em 0;">' +
             'Import a list of representative face images using ' +
             '[<span class="js_button" title="Load face label images" ' +
-	    'onclick="load_images(\'face_label\')">Import Face Labels</span>]. ' +
+            'onclick="load_images(\'face_label\')">Import Face Labels</span>]. ' +
             'Representative images correspond to facial image of individuals that ' +
             'you wish to locate and  annotate in several images.</div>';
         face_label_panel.innerHTML = htmlmsg;
@@ -1933,15 +1933,15 @@ function update_attributes_input_panel() {
             }
         }    
 
-	var fl_height = _via_face_label_height_list[_via_face_label_height_id];
+        var fl_height = _via_face_label_height_list[_via_face_label_height_id];
         for (var i=0; i<_via_face_label_list.length; ++i) {
             if ( typeof(_via_face_label_list[i]) !== 'undefined' &&
-		 typeof(_via_face_label_img_list[i]) !== 'undefined') {
-		var fid = 'fl' + i;
+                 typeof(_via_face_label_img_list[i]) !== 'undefined') {
+                var fid = 'fl' + i;
                 if ( selregion_id == i) {
-		    // if this element is hidden, auto-scroll to show this element
+                    // if this element is hidden, auto-scroll to show this element
                     face_label_html.push('<div id="' + fid + '"' + 
-					 ' class="active_face_label selected">');
+                                         ' class="active_face_label selected">');
                 } else {
                     if (_via_is_region_selected) {
                         face_label_html.push('<div id="' + fid + '" class="active_face_label">');
@@ -1949,7 +1949,7 @@ function update_attributes_input_panel() {
                         face_label_html.push('<div id="' + fid + '" class="face_label">');
                     }
                 }
-		face_label_html.push(_via_face_label_list[i] + '<br/>');
+                face_label_html.push(_via_face_label_list[i] + '<br/>');
                 face_label_html.push('<img title="' + _via_face_label_list[i] + '"');
                 face_label_html.push(' src="' + _via_face_label_img_list[i] + '"');
                 face_label_html.push(' height="' + fl_height + 'px"');
@@ -1963,18 +1963,18 @@ function update_attributes_input_panel() {
         }
         face_label_panel.innerHTML = face_label_html.join('');
 
-	// move the scrollbar automatically show that selected label is visible
-	if (selregion_id != -1) {
-	    var sel_label = document.getElementById('fl' + selregion_id);
-	    var panelwidth = attributes_input_panel.offsetWidth;
-	    var seloffset = sel_label.offsetLeft;
-	    
-	    if (seloffset > panelwidth ) {
-		attributes_input_panel.scrollLeft = sel_label.offsetLeft - panelwidth/2;
-	    } else {
-		attributes_input_panel.scrollLeft = '0';
-	    }
-	}
+        // move the scrollbar automatically show that selected label is visible
+        if (selregion_id != -1) {
+            var sel_label = document.getElementById('fl' + selregion_id);
+            var panelwidth = attributes_input_panel.offsetWidth;
+            var seloffset = sel_label.offsetLeft;
+            
+            if (seloffset > panelwidth ) {
+                attributes_input_panel.scrollLeft = sel_label.offsetLeft - panelwidth/2;
+            } else {
+                attributes_input_panel.scrollLeft = '0';
+            }
+        }
     }
 }
 
@@ -2005,35 +2005,35 @@ function set_face_label(value) {
 
 function set_attr_panel_height(label_height) {
     if (label_height >= 80 && label_height <140) {
-	document.getElementById('attributes_input_panel').style.height = '120px';
+        document.getElementById('attributes_input_panel').style.height = '120px';
     }
     if (label_height >= 140 && label_height <=200) {
-	document.getElementById('attributes_input_panel').style.height = '180px';
+        document.getElementById('attributes_input_panel').style.height = '180px';
     }
     if (label_height > 200) {
-	document.getElementById('attributes_input_panel').style.height = '300px';
+        document.getElementById('attributes_input_panel').style.height = '300px';
     }
 }
 
 function increase_face_label_height() {
     if (_via_face_label_height_id < (_via_face_label_height_list.length-1)) {
-	_via_face_label_height_id += 1;
-	var label_height = _via_face_label_height_list[_via_face_label_height_id];
-	set_attr_panel_height(label_height);
-	update_attributes_input_panel();
+        _via_face_label_height_id += 1;
+        var label_height = _via_face_label_height_list[_via_face_label_height_id];
+        set_attr_panel_height(label_height);
+        update_attributes_input_panel();
     } else {
-	show_message('Face labels cannot be zoomed-in any further!', 1000);
+        show_message('Face labels cannot be zoomed-in any further!', 1000);
     }
 }
 
 function decrease_face_label_height() {
     if (_via_face_label_height_id > 0) {
-	_via_face_label_height_id -= 1;
-	var label_height = _via_face_label_height_list[_via_face_label_height_id];
-	set_attr_panel_height(label_height);
-	update_attributes_input_panel();
+        _via_face_label_height_id -= 1;
+        var label_height = _via_face_label_height_list[_via_face_label_height_id];
+        set_attr_panel_height(label_height);
+        update_attributes_input_panel();
     } else {
-	show_message('Face labels cannot be zoomed-out any further!', 1000);
+        show_message('Face labels cannot be zoomed-out any further!', 1000);
     }
 }
 

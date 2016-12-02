@@ -34,7 +34,7 @@
     <meta name="author" content="Abhishek Dutta">
     <meta name="description" content="VGG Face Annotator lets you mark and tag rectangular facial regions in an image. It is a fork of VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via/) adapted for face annotation.">
 
-    <!-- Google analytics : used in Seebibyte project to measure impact
+    <!-- Google analytics : used in Seebibyte project to measure impact-->
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -45,7 +45,7 @@
       ga('send', 'pageview');
 
     </script>
-    -->
+    
     
     <!-- CSS style definition -->
     <style type="text/css">     
@@ -462,13 +462,13 @@
             <h3>Getting started</h3>
             <ol>
               <li>Import a list of representative face images using [<span class="js_button" title="Load face label images" onclick="load_images('face_label')">Import Face Labels</span>].
-		<ul>
-		  <li>Representative images correspond to facial image of individuals that you wish to locate and  annotate in several images.</li>
-		  <li>Select all the image files that correspond to face labels (less than 512 KB)</li>
-		  <li>If filename format is <span style="font-family: Mono;">1_Firstname_Lastname.jpg</span>, then 1 denotes the face label's display order and "Firstname Lastname" is the face region label.</li>
-		  <li>For any other filename format, the display order is automatically determined and the full filename (excluding extension) is used as face region label.
-		</ul>
-		</li>
+                <ul>
+                  <li>Representative images correspond to facial image of individuals that you wish to locate and  annotate in several images.</li>
+                  <li>Select all the image files that correspond to face labels (less than 512 KB)</li>
+                  <li>If filename format is <span style="font-family: Mono;">1_Firstname_Lastname.jpg</span>, then 1 denotes the face label's display order and "Firstname Lastname" is the face region label.</li>
+                  <li>For any other filename format, the display order is automatically determined and the full filename (excluding extension) is used as face region label.
+                </ul>
+                </li>
               <li>Now [<span class="js_button" title="Load images" onclick="load_images('image')">load the images</span>] that you wish to tag with rectangular facial regions.</li>
               <li>Press the key <b>n</b> (or <b>p</b>) to move to next (or previous image) and <b>l</b> to show the list of all images.</li>
               <li>Click mouse right button and drag to draw a rectangular region around a face in the loaded image. This newly created region is automatically selected. If you have more facial regions, you can continue to draw them.</li>
@@ -513,19 +513,19 @@
     <!-- A panel containing list of face labels -->
     <div id="attributes_input_panel">
       <div class="control_panel">
-	<span class="button" onclick="increase_face_label_height()">&plus;</span>
-	<span class="button" onclick="decrease_face_label_height()">&minus;</span>
-	<span class="button" onclick="toggle_attributes_input_panel()">&times;</span>
+        <span class="button" onclick="increase_face_label_height()">&plus;</span>
+        <span class="button" onclick="decrease_face_label_height()">&minus;</span>
+        <span class="button" onclick="toggle_attributes_input_panel()">&times;</span>
       </div>
       <div id="face_label_panel"></div>
     </div>
     
-    <script type="text/javascript" src="via_face_demo_bbcsherlock.js">
-    <!--<script type="text/javascript">-->
+    <!--<script type="text/javascript" src="via_face_demo_sherlock.js">-->
+    <script type="text/javascript">
       <!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
     </script>
-    <script type="text/javascript" src="via_face.js">
-    <!--<script type="text/javascript">-->
+    <!--<script type="text/javascript" src="via_face.js">-->
+    <script type="text/javascript">
       <!--AUTO_INSERT_VIA_JS_HERE-->
     </script>
   </body>

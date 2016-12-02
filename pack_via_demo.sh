@@ -1,9 +1,21 @@
 #!/usr/bin/env sh
 
+if [ $1 = "sherlock" ]; then
+  echo "Exporting demo containing images from BBC Sherlock"
+  VIA_DEMO_JS_FILE=via_face_demo_sherlock.js;
+  TARGET_HTML_FILE=via_face_demo_sherlock.html;
+elif [ $1 = "physicist" ]; then
+  echo "Exporting demo containing images of renowned Physicist"
+  VIA_DEMO_JS_FILE=via_face_demo_physicist.js;
+  TARGET_HTML_FILE=via_face_demo_physicist.html;
+else
+  echo "Unknown argument!"
+  exit
+fi
+
 VIA_JS_FILE=via_face.js
-VIA_DEMO_JS_FILE=via_face_demo.js
 TEMPLATE_HTML_FILE=index.html
-TARGET_HTML_FILE=via_face_demo.html
+
 TMP_FILE=temp_file.html
 
 # source: http://stackoverflow.com/questions/16811173/bash-inserting-one-files-content-into-another-file-after-the-pattern
