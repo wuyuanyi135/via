@@ -450,7 +450,7 @@
             <p>Quick start guide for face annotator:</p>
             <p>
               <ol>
-                <li>Import the list of representative face images using [<span class="js_button" title="Load face label images" onclick="load_images('face_label')">Import Face Labels</span>]</li>
+                <li>Import the list of representative face images using [<span class="js_button" title="Load face label images" onclick="load_images('face_label')">Import Face Labels</span>] (See <span class="js_button" title="Getting Started Guide" onclick="show_getting_started_panel()">Getting Started</span>] guide for more details)</li>
                 <li><span class="js_button" title="Load images" onclick="load_images('image')">[Load the images]</span> that you wish to annotate, draw rectangular regions by clicking and dragging the mouse cursor and select a face from the list of representative faces.</li>
               </ol>
             </p>
@@ -461,7 +461,14 @@
             <p>VGG Face Annotator lets you mark and tag rectangular facial regions in an image.</p>
             <h3>Getting started</h3>
             <ol>
-              <li>Import a list of representative face images using [<span class="js_button" title="Load face label images" onclick="load_images('face_label')">Import Face Labels</span>]. Note that these images should have filename in the format: <span style="font-family: Mono;">1_Firstname_Lastname.jpg</span>. Representative images correspond to facial image of individuals that you wish to locate and  annotate in several images.</li>
+              <li>Import a list of representative face images using [<span class="js_button" title="Load face label images" onclick="load_images('face_label')">Import Face Labels</span>].
+		<ul>
+		  <li>Representative images correspond to facial image of individuals that you wish to locate and  annotate in several images.</li>
+		  <li>Select all the image files that correspond to face labels (less than 512 KB)</li>
+		  <li>If filename format is <span style="font-family: Mono;">1_Firstname_Lastname.jpg</span>, then 1 denotes the face label's display order and "Firstname Lastname" is the face region label.</li>
+		  <li>For any other filename format, the display order is automatically determined and the full filename (excluding extension) is used as face region label.
+		</ul>
+		</li>
               <li>Now [<span class="js_button" title="Load images" onclick="load_images('image')">load the images</span>] that you wish to tag with rectangular facial regions.</li>
               <li>Press the key <b>n</b> (or <b>p</b>) to move to next (or previous image) and <b>l</b> to show the list of all images.</li>
               <li>Click mouse right button and drag to draw a rectangular region around a face in the loaded image. This newly created region is automatically selected. If you have more facial regions, you can continue to draw them.</li>
@@ -513,7 +520,7 @@
       <div id="face_label_panel"></div>
     </div>
     
-    <script type="text/javascript" src="via_face_demo.js">
+    <!--<script type="text/javascript" src="via_face_demo.js">-->
     <!--<script type="text/javascript">-->
       <!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
     </script>

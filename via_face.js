@@ -118,7 +118,7 @@ var _via_loaded_img_region_attr_miss_count = [];
 var _via_loaded_img_table_html = [];
 
 // face label
-var _via_face_label_height_list = [80, 100, 120, 140, 160, 180, 200, 220, 240, 260];
+var _via_face_label_height_list = [80, 100, 120, 140, 160, 180, 200, 260, 300, 360];
 var VIA_FACE_LABEL_DEFAULT_HEIGHT_ID = 4;
 var _via_face_label_height_id = 4;
 
@@ -137,7 +137,7 @@ function main() {
                  'version ' + VIA_VERSION,
                  2*VIA_THEME_MESSAGE_TIMEOUT_MS);
     show_home_panel();
-    start_demo_session(); // defined in via_demo.js
+    //start_demo_session(); // defined in via_demo.js
     
     _via_is_local_storage_available = check_local_storage();
     if (_via_is_local_storage_available) {
@@ -146,7 +146,7 @@ function main() {
         }
     }
     _via_region_attributes.add(VIA_FACE_LABEL_ATTR_NAME);
-    show_attributes_input_panel();
+    //show_attributes_input_panel();
 }
 
 //
@@ -328,23 +328,31 @@ function load_face_label_images(event) {
 function set_face_label_image(file, callback_function) {
     var filename = file.name.split('.');
     var filename = filename[0]; // remove extension
-    var filename_split = filename.split('_');
-    
-    var fileparts = [];
+
+    var label = '';
     var file_id = -1;
     
-    if (filename_split.length == 3) {
-	file_id = parseInt(filename_split[0]);
+    if (filename.includes('_')) {
+	// filename named according to convention
+	var filename_split = filename.split('_');
+	var file_id = parseInt(filename_split[0]);
 	filename_split.splice(0, 1); // remove file id
-	fileparts = filename_split.slice();
-    } else {
-	file_id = _via_face_label_list.length;
-	fileparts.push(filename);
-    }
-    var img_reader = new FileReader();
+	label = filename_split.join('_');
 
+	if (isNaN(file_id)) {
+	    file_id = _via_face_label_list.push(label);
+	    file_id -= 1; // push() returns length, 0 based index
+	} else {
+	    _via_face_label_list[file_id] = label;
+	}
+    } else {
+	label = filename;
+	file_id = _via_face_label_list.push(label);
+	file_id -= 1; // push() returns length, 0 based index
+    }
+    
+    var img_reader = new FileReader();    
     img_reader.addEventListener( "load", function() {
-        _via_face_label_list[file_id] = fileparts.join(' ');
         _via_face_label_img_list[file_id] = img_reader.result;
         callback_function();
     });
@@ -1926,7 +1934,8 @@ function update_attributes_input_panel() {
 
 	var fl_height = _via_face_label_height_list[_via_face_label_height_id];
         for (var i=0; i<_via_face_label_list.length; ++i) {
-            if ( typeof(_via_face_label_list[i]) !== 'undefined') {
+            if ( typeof(_via_face_label_list[i]) !== 'undefined' &&
+		 typeof(_via_face_label_img_list[i]) !== 'undefined') {
                 if ( selregion_id == i) {
                     face_label_html.push('<div class="active_face_label selected">');
                 } else {
@@ -1977,9 +1986,23 @@ function set_face_label(value) {
     }
 }
 
+function set_attr_panel_height(label_height) {
+    if (label_height >= 80 && label_height <140) {
+	document.getElementById('attributes_input_panel').style.height = '120px';
+    }
+    if (label_height >= 140 && label_height <=200) {
+	document.getElementById('attributes_input_panel').style.height = '180px';
+    }
+    if (label_height > 200) {
+	document.getElementById('attributes_input_panel').style.height = '300px';
+    }
+}
+
 function increase_face_label_height() {
     if (_via_face_label_height_id < (_via_face_label_height_list.length-1)) {
 	_via_face_label_height_id += 1;
+	var label_height = _via_face_label_height_list[_via_face_label_height_id];
+	set_attr_panel_height(label_height);
 	update_attributes_input_panel();
     } else {
 	show_message('Face labels cannot be zoomed-in any further!', 1000);
@@ -1989,12 +2012,8 @@ function increase_face_label_height() {
 function decrease_face_label_height() {
     if (_via_face_label_height_id > 0) {
 	_via_face_label_height_id -= 1;
-
-	var fl_height = _via_face_label_height_list[_via_face_label_height_id];
-	if ( fl_height < 160 ) {
-	    var ph = (fl_height+25) + 'px';
-	    document.getElementById('attributes_input_panel').style.height = ph;
-	}
+	var label_height = _via_face_label_height_list[_via_face_label_height_id];
+	set_attr_panel_height(label_height);
 	update_attributes_input_panel();
     } else {
 	show_message('Face labels cannot be zoomed-out any further!', 1000);
