@@ -117,6 +117,11 @@ var _via_loaded_img_fn_list = [];
 var _via_loaded_img_region_attr_miss_count = [];
 var _via_loaded_img_table_html = [];
 
+// face label
+var _via_face_label_height_list = [80, 100, 120, 140, 160, 180, 200, 220, 240, 260];
+var VIA_FACE_LABEL_DEFAULT_HEIGHT_ID = 4;
+var _via_face_label_height_id = 4;
+
 // UI html elements
 var invisible_file_input = document.getElementById("invisible_file_input");
 
@@ -141,6 +146,7 @@ function main() {
         }
     }
     _via_region_attributes.add(VIA_FACE_LABEL_ATTR_NAME);
+    show_attributes_input_panel();
 }
 
 //
@@ -1917,7 +1923,8 @@ function update_attributes_input_panel() {
                 selregion_id = _via_face_label_list.indexOf(selregion_label);
             }
         }    
-        
+
+	var fl_height = _via_face_label_height_list[_via_face_label_height_id];
         for (var i=0; i<_via_face_label_list.length; ++i) {
             if ( typeof(_via_face_label_list[i]) !== 'undefined') {
                 if ( selregion_id == i) {
@@ -1929,15 +1936,15 @@ function update_attributes_input_panel() {
                         face_label_html.push('<div class="face_label">');
                     }
                 }
+		face_label_html.push(_via_face_label_list[i] + '<br/>');
                 face_label_html.push('<img title="' + _via_face_label_list[i] + '"');
                 face_label_html.push(' src="' + _via_face_label_img_list[i] + '"');
-                face_label_html.push(' height="160px"');
+                face_label_html.push(' height="' + fl_height + 'px"');
                 if (_via_is_region_selected) {
                     face_label_html.push(' onclick="set_face_label(\'' + _via_face_label_list[i] + '\')"');
                 }
                 face_label_html.push(' alt="' + _via_face_label_list[i] + '" />');
                 //face_label_html.push('<br/>' + _via_face_label_list[i].split(' ').join('<br/>'));
-                face_label_html.push('<br/>' + _via_face_label_list[i]);
                 face_label_html.push('</div>');
             }
         }
@@ -1969,3 +1976,33 @@ function set_face_label(value) {
         _via_canvas.focus();
     }
 }
+
+function increase_face_label_height() {
+    if (_via_face_label_height_id < (_via_face_label_height_list.length-1)) {
+	_via_face_label_height_id += 1;
+	update_attributes_input_panel();
+    } else {
+	show_message('Face labels cannot be zoomed-in any further!', 1000);
+    }
+}
+
+function decrease_face_label_height() {
+    if (_via_face_label_height_id > 0) {
+	_via_face_label_height_id -= 1;
+
+	var fl_height = _via_face_label_height_list[_via_face_label_height_id];
+	if ( fl_height < 160 ) {
+	    var ph = (fl_height+25) + 'px';
+	    document.getElementById('attributes_input_panel').style.height = ph;
+	}
+	update_attributes_input_panel();
+    } else {
+	show_message('Face labels cannot be zoomed-out any further!', 1000);
+    }
+}
+
+function reset_face_label_height() {
+    _via_face_label_height = VIA_FACE_LABEL_DEFAULT_HEIGHT_ID;
+    update_attributes_input_panel();
+}
+

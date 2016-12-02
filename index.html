@@ -34,7 +34,7 @@
     <meta name="author" content="Abhishek Dutta">
     <meta name="description" content="VGG Face Annotator lets you mark and tag rectangular facial regions in an image. It is a fork of VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via/) adapted for face annotation.">
 
-    <!-- Google analytics : used in Seebibyte project to measure impact-->
+    <!-- Google analytics : used in Seebibyte project to measure impact
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -45,7 +45,7 @@
       ga('send', 'pageview');
 
     </script>
-    
+    -->
     
     <!-- CSS style definition -->
     <style type="text/css">     
@@ -271,26 +271,19 @@
       bottom: 0;
       width: 100%;
       height: 180px;
-      overflow: auto;
+      overflow-x: auto;
+      overflow-y: auto;
+      white-space: nowrap;
       background-color: #ffffff;
       border-top: 4px solid #000000;
       padding-bottom: 2em;
       }
-      #panel_close_button {
-      display: inline-block;
-      color: #808080;
-      float: right;
-      font-size: 2em;
-      font-weight: bold;
-      padding-right: 0.5em;
-      }
-      #panel_close_button:hover {
-      color: red;
-      text-decoration: none;
-      cursor: pointer;
-      }
 
       /* face label */
+      #face_label_panel {
+      display: block;
+      float: left;
+      }
       .face_label, .active_face_label {
       display: inline-block;
       padding: 1em 1em;
@@ -298,8 +291,7 @@
       font-family: Sans;
       font-size: xx-small;
       text-align: center;
-      }
-      
+      }     
       .active_face_label:hover {
       background-color: #e6e6e6;
       color: #ff0000;
@@ -308,6 +300,24 @@
       .active_face_label.selected {
       background-color: #0066ff;
       color: #ffffff;
+      }
+      .control_panel {
+      display: block;
+      float: left;
+      font-size: 1em;
+      height: 20px;
+      padding-left: 1em;
+      padding-top: 0.2em;
+      }
+      .control_panel, .button {
+      display: inline-block;
+      color: #808080;
+      padding-right: 0.4em;
+      }
+      .control_panel, .button:hover {
+      color: red;
+      text-decoration: none;
+      cursor: pointer;
       }
     </style>
   </head>
@@ -495,16 +505,20 @@
 
     <!-- A panel containing list of face labels -->
     <div id="attributes_input_panel">
-      <span id="panel_close_button" onclick="toggle_attributes_input_panel()">&times</span>
+      <div class="control_panel">
+	<span class="button" onclick="increase_face_label_height()">&plus;</span>
+	<span class="button" onclick="decrease_face_label_height()">&minus;</span>
+	<span class="button" onclick="toggle_attributes_input_panel()">&times;</span>
+      </div>
       <div id="face_label_panel"></div>
     </div>
     
-    <!--<script type="text/javascript" src="via_face_demo.js">-->
-    <script type="text/javascript">
+    <script type="text/javascript" src="via_face_demo.js">
+    <!--<script type="text/javascript">-->
       <!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
     </script>
-    <!--<script type="text/javascript" src="via_face.js">-->
-    <script type="text/javascript">
+    <script type="text/javascript" src="via_face.js">
+    <!--<script type="text/javascript">-->
       <!--AUTO_INSERT_VIA_JS_HERE-->
     </script>
   </body>
