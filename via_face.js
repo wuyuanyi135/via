@@ -137,7 +137,7 @@ function main() {
                  'version ' + VIA_VERSION,
                  2*VIA_THEME_MESSAGE_TIMEOUT_MS);
     show_home_panel();
-    //start_demo_session(); // defined in via_demo.js
+    start_demo_session(); // defined in via_demo.js
     
     _via_is_local_storage_available = check_local_storage();
     if (_via_is_local_storage_available) {
@@ -146,7 +146,7 @@ function main() {
         }
     }
     _via_region_attributes.add(VIA_FACE_LABEL_ATTR_NAME);
-    //show_attributes_input_panel();
+    show_attributes_input_panel();
 }
 
 //
@@ -1243,8 +1243,9 @@ function reload_img_table() {
     }
     
     _via_loaded_img_table_html = [];
-    _via_loaded_img_table_html.push('<span id="panel_close_button" ' +
-                                    'onclick="toggle_img_list()">&times</span>');
+    _via_loaded_img_table_html.push('<span class="button"' +
+				    ' style="font-size: 2em; float: right;"' + 
+                                    ' onclick="toggle_img_list()">&times</span>');
     _via_loaded_img_table_html.push('<h3>Image List</h3>');
     _via_loaded_img_table_html.push('<ul>');
     for (var i=0; i<_via_images_count; ++i) {
@@ -1936,13 +1937,16 @@ function update_attributes_input_panel() {
         for (var i=0; i<_via_face_label_list.length; ++i) {
             if ( typeof(_via_face_label_list[i]) !== 'undefined' &&
 		 typeof(_via_face_label_img_list[i]) !== 'undefined') {
+		var fid = 'fl' + i;
                 if ( selregion_id == i) {
-                    face_label_html.push('<div class="active_face_label selected">');
+		    // if this element is hidden, auto-scroll to show this element
+                    face_label_html.push('<div id="' + fid + '"' + 
+					 ' class="active_face_label selected">');
                 } else {
                     if (_via_is_region_selected) {
-                        face_label_html.push('<div class="active_face_label">');
+                        face_label_html.push('<div id="' + fid + '" class="active_face_label">');
                     } else {
-                        face_label_html.push('<div class="face_label">');
+                        face_label_html.push('<div id="' + fid + '" class="face_label">');
                     }
                 }
 		face_label_html.push(_via_face_label_list[i] + '<br/>');
@@ -1958,6 +1962,19 @@ function update_attributes_input_panel() {
             }
         }
         face_label_panel.innerHTML = face_label_html.join('');
+
+	// move the scrollbar automatically show that selected label is visible
+	if (selregion_id != -1) {
+	    var sel_label = document.getElementById('fl' + selregion_id);
+	    var panelwidth = attributes_input_panel.offsetWidth;
+	    var seloffset = sel_label.offsetLeft;
+	    
+	    if (seloffset > panelwidth ) {
+		attributes_input_panel.scrollLeft = sel_label.offsetLeft - panelwidth/2;
+	    } else {
+		attributes_input_panel.scrollLeft = '0';
+	    }
+	}
     }
 }
 

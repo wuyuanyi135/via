@@ -1,15 +1,6 @@
-## [0.1b] - not released yet
- * added support for file attributes (useful for weakly supervised learning)
- * spreadsheet like editor for region and file attributes
- * improved visualization of loaded image list
- * user annotation data cached in browser's localStorage (for data recovery on browser crash)
- * zoom in/out support
-
-## [0.1b] - 2016-10-24
- * first release of VGG image annotator
- * supports following region shape: rectangle, circle, ellipse, polygon
- * contains basic image region operations such as move, resize, delete
- * Ctrl a/c/v to select all, copy and paste image regions
- * import/export of region data from/to text file in csv,json format
- * display list of loaded images
-
+## [0.1] - not released yet
+ * a fork of VGG Image Annotator (VIA) adapted for face annotation
+ * a lot of code cleanup for readability and efficiency
+ * import face labels from image files
+ * zoom in/out of panel containing face labels
+ * getting started guide
