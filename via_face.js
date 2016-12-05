@@ -137,7 +137,6 @@ function main() {
                  'version ' + VIA_VERSION,
                  2*VIA_THEME_MESSAGE_TIMEOUT_MS);
     show_home_panel();
-    //start_demo_session(); // defined in via_demo.js
     
     _via_is_local_storage_available = check_local_storage();
     if (_via_is_local_storage_available) {
@@ -146,7 +145,10 @@ function main() {
         }
     }
     _via_region_attributes.add(VIA_FACE_LABEL_ATTR_NAME);
-    //show_attributes_input_panel();
+
+    // demo (used for debugging)
+    start_demo_session(); // defined in via_demo.js
+    show_attributes_input_panel();
 }
 
 //
@@ -1535,6 +1537,8 @@ window.addEventListener("keydown", function(e) {
         case 'a':
             toggle_all_regions_selection(true);
             _via_is_all_region_selected = true;
+	    _via_is_region_selected = false;
+	    _via_user_sel_region_id = -1;
             update_attributes_input_panel();
             _via_redraw_canvas();
             e.preventDefault();
