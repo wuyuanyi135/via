@@ -34,7 +34,7 @@
     <meta name="author" content="Abhishek Dutta">
     <meta name="description" content="VGG Face Annotator lets you mark and tag rectangular facial regions in an image. It is a fork of VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via/) adapted for face annotation.">
 
-    <!-- Google analytics : used in Seebibyte project to measure impact-->
+    <!-- Google analytics : used in Seebibyte project to measure impact
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -45,6 +45,7 @@
       ga('send', 'pageview');
 
     </script>
+    -->
     
     
     <!-- CSS style definition -->
@@ -430,7 +431,7 @@
                 <td>Cancel operation</td>
               </tr>
               <tr>
-                <td style="width: 6em;">Alt + d</td>
+                <td style="width: 6em;">Alt + d,<br/>Del,<br/>Backspace</td>
                 <td>Delete image region</td>
               </tr>           
               <tr>
@@ -450,11 +451,12 @@
             <p>Quick start guide for face annotator:</p>
             <p>
               <ol>
-                <li>Import the list of representative face images using [<span class="js_button" title="Load face label images" onclick="load_images('face_label')">Import Face Labels</span>] (See <span class="js_button" title="Getting Started Guide" onclick="show_getting_started_panel()">Getting Started</span>] guide for more details)</li>
-                <li><span class="js_button" title="Load images" onclick="load_images('image')">[Load the images]</span> that you wish to annotate, draw rectangular regions by clicking and dragging the mouse cursor and select a face from the list of representative faces.</li>
+                <li>Import the list of representative face images using <span class="js_button" title="Load face label images" onclick="load_images('face_label')">Import Face Labels</span> (see <span class="js_button" title="Getting Started Guide" onclick="show_getting_started_panel()">Getting Started</span> guide for more details)</li>
+                <li><span class="js_button" title="Load images" onclick="load_images('image')">Load the images</span> that you wish to annotate, draw rectangular regions by clicking and dragging the mouse cursor and select a face from the list of representative faces.</li>
               </ol>
             </p>
             <div id="localStorage_recovery_msg"></div>
+	    <p>Supported browsers: Mozilla Firefox (&gt; 50), Google Chrome (&gt; 54)</p>
           </div>
 
           <div id="getting_started_panel" style="width: 40em;">
@@ -524,7 +526,7 @@
     <script type="text/javascript">
       <!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
     </script>
-    <!--<script type="text/javascript" src="via_face.js">-->
+    <script type="text/javascript" src="via_face.js"></script>
     <script type="text/javascript">
       <!--AUTO_INSERT_VIA_JS_HERE-->
     </script>

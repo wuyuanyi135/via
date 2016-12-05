@@ -147,8 +147,8 @@ function main() {
     _via_region_attributes.add(VIA_FACE_LABEL_ATTR_NAME);
 
     // demo (used for debugging)
-    start_demo_session(); // defined in via_demo.js
-    show_attributes_input_panel();
+    //start_demo_session(); // defined in via_demo.js
+    //show_attributes_input_panel();
 }
 
 //
