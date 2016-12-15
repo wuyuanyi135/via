@@ -1,6 +1,6 @@
 #filename,file_size,face_count,face_id,x,y,width,height,face_label
-bbc3_sherlock1.png,82546,2,0,233,118,250,300,"Benedict Cumberbatch"
-bbc3_sherlock1.png,82546,2,1,787,165,134,206,"Martin Freeman"
-bbc3_sherlock2.png,86503,3,0,246,171,77,102,"Martin Freeman"
-bbc3_sherlock2.png,86503,3,1,650,116,77,106,"Benedict Cumberbatch"
-bbc3_sherlock2.png,86503,3,2,882,109,83,104,"Jonathan Aris"
+bbc3_sherlock1.jpg,82546,2,0,233,118,250,300,"Benedict Cumberbatch"
+bbc3_sherlock1.jpg,82546,2,1,787,165,134,206,"Martin Freeman"
+bbc3_sherlock2.jpg,86503,3,0,246,171,77,102,"Martin Freeman"
+bbc3_sherlock2.jpg,86503,3,1,650,116,77,106,"Benedict Cumberbatch"
+bbc3_sherlock2.jpg,86503,3,2,882,109,83,104,"Jonathan Aris"

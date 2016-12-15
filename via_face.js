@@ -339,8 +339,7 @@ function set_face_label_image(file, callback_function) {
         var filename_split = filename.split('_');
         var file_id = parseInt(filename_split[0]);
         filename_split.splice(0, 1); // remove file id
-        label = filename_split.join('_');
-
+        label = filename_split.join(' ');
         if (isNaN(file_id)) {
             file_id = _via_face_label_list.push(label);
             file_id -= 1; // push() returns length, 0 based index
