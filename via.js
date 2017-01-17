@@ -32,7 +32,8 @@ var VIA_SHORT_NAME = 'VIA';
 var VIA_REGION_SHAPE = { RECT:'rect',
                          CIRCLE:'circle',
                          ELLIPSE:'ellipse',
-                         POLYGON:'polygon'};
+                         POLYGON:'polygon',
+			 NESTED_RECT:'nested_rect'};
 
 var VIA_REGION_EDGE_TOL = 5;
 var VIA_POLYGON_VERTEX_MATCH_TOL = 5;
@@ -1432,6 +1433,85 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
                     _via_canvas_regions.push(canvas_img_region);
 
                     break;
+		case VIA_REGION_SHAPE.NESTED_RECT:
+		    var w = Math.abs(region_y1 - region_y0);
+		    var h = Math.abs(region_x1 - region_x0);
+		    var dw = Math.floor(0.1 * w);
+		    var dh = Math.floor(0.1 * h);
+
+		    var all_points_x = [];
+		    var all_points_y = [];
+		    var canvas_all_points_x = [];
+		    var canvas_all_points_y = [];
+		    
+		    // bottom-right inside
+		    canvas_all_points_x.push( Math.round(region_x1 - dw) );
+		    canvas_all_points_y.push( Math.round(region_y1 - dh) );
+		    
+		    // top-right inside
+		    canvas_all_points_x.push( Math.round(region_x1 - dw) );
+		    canvas_all_points_y.push( Math.round(region_y0 + dh) );
+		    
+		    // top-left inside
+		    canvas_all_points_x.push( Math.round(region_x0 + dw) );
+		    canvas_all_points_y.push( Math.round(region_y0 + dh) );
+		    
+		    // bottom-left inside
+		    canvas_all_points_x.push( Math.round(region_x0 + dw) );
+		    canvas_all_points_y.push( Math.round(region_y1 - dh) );
+		    
+		    // bottom-left outside
+		    canvas_all_points_x.push( Math.round(region_x0) );
+		    canvas_all_points_y.push( Math.round(region_y1) );
+		    
+		    // top-left outside
+		    canvas_all_points_x.push( Math.round(region_x0) );
+		    canvas_all_points_y.push( Math.round(region_y0) );
+		    
+		    // top-right outside
+		    canvas_all_points_x.push( Math.round(region_x1) );
+		    canvas_all_points_y.push( Math.round(region_y0) );
+
+		    // bottom-right outside
+		    canvas_all_points_x.push( Math.round(region_x1) );
+		    canvas_all_points_y.push( Math.round(region_y1) );
+
+		    // bottom-left outside
+		    canvas_all_points_x.push( Math.round(region_x0) );
+		    canvas_all_points_y.push( Math.round(region_y1) );
+
+		    // bottom-left inside
+		    canvas_all_points_x.push( Math.round(region_x0 + dw) );
+		    canvas_all_points_y.push( Math.round(region_y1 - dh) );
+
+		    // close the path at bottom-right inside
+		    canvas_all_points_x.push( Math.round(region_x1 - dw) );
+		    canvas_all_points_y.push( Math.round(region_y1 - dh) );
+		    
+		    var points_str = '';
+		    for ( var i=0; i<canvas_all_points_x.length; ++i) {
+			all_points_x[i] = Math.round( canvas_all_points_x[i] * _via_canvas_scale );
+			all_points_y[i] = Math.round( canvas_all_points_y[i] * _via_canvas_scale );
+			
+			points_str += all_points_x[i] + ' ' + all_points_y[i] + ',';
+		    }
+		    points_str = points_str.substring(0, points_str.length-1); // remove last comma
+		    
+		    var polygon_region = new ImageRegion();
+		    polygon_region.shape_attributes.set('name', 'polygon');
+		    polygon_region.shape_attributes.set('all_points_x', all_points_x);
+		    polygon_region.shape_attributes.set('all_points_y', all_points_y);
+		    _via_current_polygon_region_id = _via_img_metadata[_via_image_id].regions.length;
+		    _via_img_metadata[_via_image_id].regions.push(polygon_region);
+
+		    var canvas_polygon_region = new ImageRegion();
+		    canvas_polygon_region.shape_attributes.set('name', 'polygon');
+		    canvas_polygon_region.shape_attributes.set('all_points_x', canvas_all_points_x);
+		    canvas_polygon_region.shape_attributes.set('all_points_y', canvas_all_points_y);
+		    
+                    _via_canvas_regions.push(canvas_polygon_region);
+
+		    break;
 		case VIA_REGION_SHAPE.POLYGON:
                     // handled by _via_is_user_drawing polygon
                     break;
@@ -1561,6 +1641,7 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
 
         switch (_via_current_shape ) {
         case VIA_REGION_SHAPE.RECT:
+	case VIA_REGION_SHAPE.NESTED_RECT:
             _via_draw_rect_region(region_x0, region_y0,
                                   dx, dy, false);
             break;
@@ -1589,6 +1670,7 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
         var attr = _via_canvas_regions[region_id].shape_attributes;
         switch (attr.get('name')) {
         case VIA_REGION_SHAPE.RECT:
+	case VIA_REGION_SHAPE.NESTED_RECT:
             var x0 = _via_canvas_regions[region_id].shape_attributes.get('x');
             var y0 = _via_canvas_regions[region_id].shape_attributes.get('y');
             var x1 = x0 + _via_canvas_regions[region_id].shape_attributes.get('width');
