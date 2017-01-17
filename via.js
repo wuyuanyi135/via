@@ -1444,37 +1444,21 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
 		    var canvas_all_points_x = [];
 		    var canvas_all_points_y = [];
 		    
-		    // bottom-right inside
-		    canvas_all_points_x.push( Math.round(region_x1 - dw) );
-		    canvas_all_points_y.push( Math.round(region_y1 - dh) );
-		    
-		    // top-right inside
-		    canvas_all_points_x.push( Math.round(region_x1 - dw) );
-		    canvas_all_points_y.push( Math.round(region_y0 + dh) );
-		    
-		    // top-left inside
-		    canvas_all_points_x.push( Math.round(region_x0 + dw) );
-		    canvas_all_points_y.push( Math.round(region_y0 + dh) );
-		    
-		    // bottom-left inside
-		    canvas_all_points_x.push( Math.round(region_x0 + dw) );
-		    canvas_all_points_y.push( Math.round(region_y1 - dh) );
-		    
 		    // bottom-left outside
 		    canvas_all_points_x.push( Math.round(region_x0) );
 		    canvas_all_points_y.push( Math.round(region_y1) );
-		    
-		    // top-left outside
-		    canvas_all_points_x.push( Math.round(region_x0) );
-		    canvas_all_points_y.push( Math.round(region_y0) );
+
+		    // bottom-right outside
+		    canvas_all_points_x.push( Math.round(region_x1) );
+		    canvas_all_points_y.push( Math.round(region_y1) );
 		    
 		    // top-right outside
 		    canvas_all_points_x.push( Math.round(region_x1) );
 		    canvas_all_points_y.push( Math.round(region_y0) );
 
-		    // bottom-right outside
-		    canvas_all_points_x.push( Math.round(region_x1) );
-		    canvas_all_points_y.push( Math.round(region_y1) );
+		    // top-left outside
+		    canvas_all_points_x.push( Math.round(region_x0) );
+		    canvas_all_points_y.push( Math.round(region_y0) );
 
 		    // bottom-left outside
 		    canvas_all_points_x.push( Math.round(region_x0) );
@@ -1483,9 +1467,21 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
 		    // bottom-left inside
 		    canvas_all_points_x.push( Math.round(region_x0 + dw) );
 		    canvas_all_points_y.push( Math.round(region_y1 - dh) );
-
-		    // close the path at bottom-right inside
+		    
+		    // top-left inside
+		    canvas_all_points_x.push( Math.round(region_x0 + dw) );
+		    canvas_all_points_y.push( Math.round(region_y0 + dh) );
+		    
+		    // top-right inside
 		    canvas_all_points_x.push( Math.round(region_x1 - dw) );
+		    canvas_all_points_y.push( Math.round(region_y0 + dh) );
+		    
+		    // bottom-right inside
+		    canvas_all_points_x.push( Math.round(region_x1 - dw) );
+		    canvas_all_points_y.push( Math.round(region_y1 - dh) );
+
+		    // bottom-left inside
+		    canvas_all_points_x.push( Math.round(region_x0 + dw) );
 		    canvas_all_points_y.push( Math.round(region_y1 - dh) );
 		    
 		    var points_str = '';
