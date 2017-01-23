@@ -224,12 +224,17 @@ function _via_init() {
 	    show_localStorage_recovery_options();
 	}
     }
-    //start_demo_session();
-    _via_load_submodules();
+    if (typeof start_demo_session === 'function') {
+	start_demo_session();
+    }
+    
+    if (typeof _via_load_submodules === 'function') {
+	_via_load_submodules();
+    }
 }
 
 // to be implemented by submodules
-function _via_load_submodules() {}
+//function _via_load_submodules() {}
 
 //
 // Handlers for top navigation bar
@@ -2906,7 +2911,10 @@ function move_to_prev_image() {
         } else {
             show_image(_via_image_index - 1);
         }
-	_via_hook_prev_image(current_img_index);
+
+	if (typeof _via_hook_prev_image === 'function') {
+	    _via_hook_prev_image(current_img_index);
+	}
     }    
 }
 
@@ -2922,7 +2930,10 @@ function move_to_next_image() {
         } else {
             show_image(_via_image_index + 1);
         }
-	_via_hook_next_image(current_img_index);
+
+	if (typeof _via_hook_next_image === 'function') {
+	    _via_hook_next_image(current_img_index);
+	}
     }
 }
 
@@ -3503,9 +3514,8 @@ function toggle_accordion_panel(e) {
 // hooks for sub-modules
 // implemented by sub-modules
 //
-function _via_hook_next_image() {}
-function _via_hook_prev_image() {}
-function _via_hook_before_unload() {}
+//function _via_hook_next_image() {}
+//function _via_hook_prev_image() {}
 
 //
 // debug

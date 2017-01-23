@@ -232,10 +232,10 @@ function _dmiat_deposit_metadata() {
 		
 		var url = ghurl + 'gists/' + gistid + '?access_token=' + PERSONAL_ACCESS_TOKEN;
 
-		console.log('sending to url : ' + url);
-		console.log('payload : ' + JSON.stringify(payload));
-		console.log('img_metadata (json) : ' + img_metadata);
-		console.log('img_metadata (str) : ' + img_metadata_str);
+		//console.log('sending to url : ' + url);
+		//console.log('payload : ' + JSON.stringify(payload));
+		//console.log('img_metadata (json) : ' + img_metadata);
+		//console.log('img_metadata (str) : ' + img_metadata_str);
 		
 		gh.open('PATCH', url);
 		gh.send(JSON.stringify(payload));
