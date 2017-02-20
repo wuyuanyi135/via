@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8"> 
+    <meta charset="UTF-8">
     <!--
         VGG Image Annotator (via)
         www.robots.ox.ac.uk/~vgg/software/via/
@@ -37,17 +37,17 @@
     <!-- Google analytics : used in Seebibyte project to measure impact -->
     <script type="text/javascript">
       //<!--AUTO_INSERT_GOOGLE_ANALYTICS_JS_HERE-->
-    </script>    
-    
+    </script>
+
     <!-- CSS style definition -->
-    <style type="text/css">     
+    <style type="text/css">
       body {
       min-width: 800px;
       padding: 0;
       margin: 0;
-      font-family: Sans;      
+      font-family: Sans;
       }
-      
+
       /* Top panel : #navbar, #toolbar */
       .top_panel {
       position: relative;
@@ -128,7 +128,7 @@
       color: white;
       }
       .toolbar li:hover {
-      background-color: #333333; 
+      background-color: #333333;
       color: red;
       cursor: pointer;
       }
@@ -148,7 +148,7 @@
       width: 100%;
       z-index: 1;
       padding: 0;
-      padding-top: 2em;
+      padding-top: 1.0125em; /* ensures the mouse event (x,y) coordinates are integer */
       }
       #leftsidebar {
       display: table-cell;
@@ -194,7 +194,7 @@
       }
       button.leftsidebar_accordion.active:after {
       content: '\2796';
-      }      
+      }
       .leftsidebar_accordion_panel {
       display: none;
       padding-top: 0;
@@ -205,7 +205,7 @@
       .leftsidebar_accordion_panel.show {
       display: block;
       }
-      
+
       /* Region shape selection panel inside leftsidebar */
       ul.region_shape {
       font-size: xx-large;
@@ -229,7 +229,7 @@
       fill: #ffffff;
       stroke: #ff0000;
       }
-      
+
       /* Loaded image list shown in leftsidebar panel */
       #img_list_panel {
       display: none;
@@ -267,7 +267,7 @@
       text-overflow: ellipsis;
       z-index: 1000;
       }
-      
+
       #invisible_file_input {
       width: 0.1px;
       height: 0.1px;
@@ -280,15 +280,19 @@
       .text_panel {
       display: none;
       margin: auto;
-      width: 40%;
       font-size: medium;
-      line-height: 1.5em;
+      line-height: 1.3em;
       margin: 0;
+      max-width: 700px;
       }
       .text_panel li {
       margin: 1em 0;
+      text-align: left;
       }
-      
+      .text_panel p {
+      text-align: left;
+      }
+
       .action_text_link {
       background-color: #aaeeff;
       color: #000000;
@@ -345,6 +349,7 @@
       margin: 0;
       height: 1em;
       white-space: nowrap;
+      vertical-align: top;
       }
       #bottom_panel tr:first-child td, #bottom_panel td:first-child {
       padding: 1em 1em;
@@ -358,6 +363,7 @@
       height: 1.3em;
       font-size: small;
       background-color: #ffffff;
+      vertical-align: top;
       }
       #bottom_panel input:hover {
       background-color: #e6e6e6;
@@ -402,11 +408,23 @@
       left: 0px;
       z-index: 2;
       }
-      #getting_started_panel {
-      display: none;
+      /* Loading spinbar */
+      .loading_spinbox {
+      display: inline-block;
+      border: 0.5em solid #cccccc;
+      border-radius: 50%;
+      border-top: 0.5em solid #000000;
+      -webkit-animation: spin 2s linear infinite;
+      animation: spin 2s linear infinite;
       }
-
-
+      @-webkit-keyframes spin {
+      0% { -webkit-transform: rotate(0deg); }
+      100% { -webkit-transform: rotate(360deg); }
+      }
+      @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+      }
     </style>
   </head>
 
@@ -415,31 +433,31 @@
       <defs>
         <symbol id="shape_rectangle">
           <title>Rectangular region shape</title>
-          <rect width="20" height="12" x="6" y="10" />
+          <rect width="20" height="12" x="6" y="10" stroke-width="2"/>
         </symbol>
         <symbol id="shape_circle">
           <title>Circular region shape</title>
-          <circle r="10" cx="16" cy="16" />
+          <circle r="10" cx="16" cy="16" stroke-width="2"/>
         </symbol>
         <symbol id="shape_ellipse">
           <title>Elliptical region shape</title>
-          <ellipse rx="12" ry="8" cx="16" cy="16" />
+          <ellipse rx="12" ry="8" cx="16" cy="16" stroke-width="2"/>
         </symbol>
         <symbol id="shape_polygon">
           <title>Polyline region shape</title>
-          <path d="M 15.25,2.2372 3.625,11.6122 6,29.9872 l 20.75,-9.625 2.375,-14.75 z" />
+          <path d="M 15.25,2.2372 3.625,11.6122 6,29.9872 l 20.75,-9.625 2.375,-14.75 z" stroke-width="2"/>
         </symbol>
         <symbol id="shape_point">
           <title>Point region shape</title>
-          <circle r="4" cx="16" cy="16" style="fill: #000000"/>
+          <circle r="3" cx="16" cy="16" stroke-width="2"/>
         </symbol>
       </defs>
     </svg>
-        
+
     <div class="top_panel" id="ui_top_panel">
       <!-- Navigation menu -->
       <div class="navbar">
-        <ul> 
+        <ul>
           <li><a onclick="show_home_panel()" title="Home">Home</a></li>
           <li class="dropdown"><a title="Image" class="drop_menu_item">Image &#9662;</a>
             <div class="dropdown-content">
@@ -457,12 +475,13 @@
           <li class="dropdown"><a title="View" class="drop_menu_item">View &#9662;</a>
             <div class="dropdown-content">
               <a onclick="toggle_region_boundary_visibility()" title="Show or hide region boundaries">Show/hide region boundaries</a>
-	      <a onclick="toggle_region_id_visibility()" title="Show or hide region label">Show/hide region label</a>
-	    </div>
-	  </li>
+              <a onclick="toggle_region_id_visibility()" title="Show or hide region label">Show/hide region label</a>
+            </div>
+          </li>
           <li class="dropdown"><a onclick="show_about_panel()" title="Help">Help &#9662;</a>
             <div class="dropdown-content">
-	      <a onclick="show_getting_started_panel()" title="Getting started with VGG Image Annotator (VIA)">Getting Started</a>
+              <a onclick="show_getting_started_panel()" title="Getting started with VGG Image Annotator (VIA)">Getting Started</a>
+              <a onclick="show_license_panel()" title="VIA License">License</a>
               <a onclick="show_about_panel()" title="About VGG Image Annotator (VIA)">About</a>
             </div>
           </li>
@@ -473,22 +492,24 @@
       <!-- Shortcut toolbar -->
       <div class="toolbar">
         <ul>
+          <!--
           <li onclick="sel_local_images()" title="Load or Add Images">&ctdot;</li>
           <li onclick="sel_local_data_file('annotations')" title="Import Annotations">&uarr;</li>
           <li onclick="download_all_region_data('csv')" title="Save Annotations (as CSV)">&DownArrowBar;</li>
-          
-          <li style="margin-left: 2em;" onclick="move_to_prev_image()" title="Previous Image">&larr;</li>
-          <li onclick="move_to_next_image()" title="Next Image">&rarr;</li>
-          <li onclick="toggle_img_list()" title="List Images">&#9776;</li>
+          -->
 
-          <li style="margin-left: 2em;" onclick="zoom_out()" title="Zoom Out">&minus;</li>
-          <li onclick="zoom_in()" title="Zoom In">&plus;</li>
-          <li onclick="reset_zoom_level()" title="Zoom Reset">&equals;</li>
+          <li id="toolbar_prev_img" style="margin-left: 1em;" onclick="move_to_prev_image()" title="Previous Image">&larr;</li>
+          <li id="toolbar_next_img" onclick="move_to_next_image()" title="Next Image">&rarr;</li>
+          <li id="toolbar_list_img" onclick="toggle_img_list()" title="List Images">&#9776;</li>
 
-          <li style="margin-left: 2em;" onclick="copy_sel_regions()" title="Copy Region">c</li>
-          <li onclick="paste_sel_regions()" title="Paste Region">v</li>
-          <li onclick="sel_all_regions()" title="Select All Regions">a</li>
-          <li onclick="del_sel_regions()" title="Delete Region">&times;</li>
+          <li id="toolbar_zoom_out" style="margin-left: 2em;" onclick="zoom_out()" title="Zoom Out">&minus;</li>
+          <li id="toolbar_zoom_in" onclick="zoom_in()" title="Zoom In">&plus;</li>
+          <li id="toolbar_zoom_reset" onclick="reset_zoom_level()" title="Zoom Reset">&equals;</li>
+
+          <li id="toolbar_copy_region" style="margin-left: 2em;" onclick="copy_sel_regions()" title="Copy Region">c</li>
+          <li id="toolbar_paste_region" onclick="paste_sel_regions()" title="Paste Region">v</li>
+          <li id="toolbar_sel_all_region" onclick="sel_all_regions()" title="Select All Regions">a</li>
+          <li id="toolbar_del_region" onclick="del_sel_regions()" title="Delete Region">&times;</li>
         </ul>
       </div> <!-- endof #toolbar -->
       <input type="file" id="invisible_file_input" multiple name="files[]" style="display:none">
@@ -497,9 +518,9 @@
     <!-- Middle Panel contains a left-sidebar and image display areas -->
     <div class="middle_panel">
       <div id="leftsidebar">
-	<button onclick="toggle_accordion_panel(this)" class="leftsidebar_accordion active">Image</button>
-	<div class="leftsidebar_accordion_panel show" id="fileinfo">Images not loaded yet!</div>
-	
+        <button onclick="toggle_accordion_panel(this)" class="leftsidebar_accordion active">Image</button>
+        <div class="leftsidebar_accordion_panel show" id="fileinfo">Images not loaded yet!</div>
+
         <button onclick="toggle_accordion_panel(this)" class="leftsidebar_accordion active">Region Shape</button>
         <div class="leftsidebar_accordion_panel show" id="accordion_region_shape_panel">
           <ul class="region_shape">
@@ -528,7 +549,7 @@
             <tr>
               <td>Ctrl + c</td>
               <td>Copy sel. regions</td>
-            </tr>           
+            </tr>
             <tr>
               <td>Ctrl + v</td>
               <td>Paste sel. regions</td>
@@ -571,64 +592,88 @@
           <canvas id="region_canvas">Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.</canvas>
         </div>
 
-        <div id="text_panel">
-          <div id="via_start_info_panel">Starting VGG Image Annotator ...</div>
+        <div>
+          <div class="text_panel" id="via_start_info_panel">Starting VGG Image Annotator ...</div>
 
           <div class="text_panel" id="about_panel">
-            <h1>VGG Image Annotator (VIA)</h1>
-            <p style="font-family: Mono; font-size: small;">version <a href="https://gitlab.com/vgg/via/raw/master/CHANGELOG">0.1<a/> (Jan. 2017)</p>
+            <p style="font-size: 2em;">VGG Image Annotator</p>
+            <p style="font-size: 0.8em;">version <a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">1.0</a></p>
             <p>
-              VGG Image Annotator (VIA) is an <a href="https://gitlab.com/vgg/via/">open source project</a> 
-              developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> 
+              VGG Image Annotator (VIA) is an <a href="https://gitlab.com/vgg/via/">open source project</a>
+              developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a>
               and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.
               With this standalone application, you can define regions in an image and create a textual description of those regions.
               Such image regions and descriptions are useful for supervised training of learning algorithms.
             </p>
-            <p>
-              Features:
-              <ul>
-                <li>based solely on HTML, CSS and Javascript (no dependecies on any javascript libraries)</li>
-                <li>can be used offline (complete application packaged in a single html file of size &lt; 200KB)</li>
-                <li>requires nothing more than a modern web browser (tested on firefox and chrome)</li>
-                <li>supports following region shapes: rectangle, circle, ellipse, polygon</li>
-                <li>supports multiple attributes for each image region</li>
-                <li>import (and export) of region data from (to) text file in csv and json format</li>
-                <li>hundreds of images can be loaded and annotated without any performance degradation</li>
-              </ul>
-            </p>
+            <p>Features:</p>
+            <ul>
+              <li>based solely on HTML, CSS and Javascript (no external javascript libraries)</li>
+              <li>can be used off-line (full application in a single html file of size &lt; 200KB)</li>
+              <li>requires nothing more than a modern web browser</li>
+              <li>supported region shapes: rectangle, circle, ellipse, polygon and point</li>
+              <li>import/export of region data in csv and json file format</li>
+            </ul>
             <p>For more details, visit <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">http://www.robots.ox.ac.uk/~vgg/software/via/</a>.</p>
+            <p>&nbsp;</p>
+            <p>Copyright &copy; 2016-2017, <a href="mailto:adutta@robots.ox.ac.uk">Abhishek Dutta</a></p>
           </div>
 
-	  <div class="text_panel" id="getting_started_panel">
+          <div class="text_panel" id="getting_started_panel">
             <h1>Getting Started</h1>
-	    <ol>
-	      <li>Click [Image > Load or Add Images] in the top menu bar to load a set of images that you wish to annotate.</li>
-	      <li>Press n (or p) to navigate through the loaded images. You can also use the &larr; and &rarr; icons in the top panel toolbar for navigation.</li>
-	      <li>Click <b>Region Attributes</b> in the left panel to reveal a panel in the bottom. Click <b>[Add New]</b> tp add a new attribute. For example:
-		<pre>
-		  object_name
-		  object_color
-		</pre>
-		You can add more region attributes according to you needs.
-	      <li>In the <b>Region Shape</b> section in the left panel, click the rectangular shape</li>
-	      <li>On the image area, keep pressing the right click button as you drag the mouse cursor. This will draw a rectangular region on the image.</li>
-	      <li>This newly created region is automatically selected. Now you can enter the attribute value for this region in the bottom panel. For example:
-		<pre>
-		  object_name = dog
-		  object_color = white
-		</pre>
-		You can annotate multiple regions in this image or other images and assign a value to each pre-defined attribute.</li>
-	      <li>To download the annotated region data, click <b>[Annotation > Save as CSV]</b> in the top menu bar. This will download a text file containing region shape and attribute data.</li>
-	      <li>Next time, you can start from the point your left by first loading the images and then importing the CSV file (downloaded in step 7) by clicking <b>[Annotation > Import]</b>.
-	    </li></ol>
+            <ol>
+              <li>Click [Image > Load or Add Images] in the top menu bar to load a set of images that you wish to annotate.</li>
+              <li>Press n (or p) to navigate through the loaded images. You can also use the &larr; and &rarr; icons in the top panel toolbar for navigation.</li>
+              <li>Click <b>Region Attributes</b> in the left panel to reveal a panel in the bottom. Click <b>[Add New]</b> tp add a new attribute. For example:
+                <pre>
+                  object_name
+                  object_color
+                </pre>
+                You can add more region attributes according to you needs.
+              <li>In the <b>Region Shape</b> section in the left panel, click the rectangular shape</li>
+              <li>On the image area, keep pressing the right click button as you drag the mouse cursor. This will draw a rectangular region on the image.</li>
+              <li>This newly created region is automatically selected. Now you can enter the attribute value for this region in the bottom panel. For example:
+                <pre>
+                  object_name = dog
+                  object_color = white
+                </pre>
+                You can annotate multiple regions in this image or other images and assign a value to each pre-defined attribute.</li>
+              <li>To download the annotated region data, click <b>[Annotation > Save as CSV]</b> in the top menu bar. This will download a text file containing region shape and attribute data.</li>
+              <li>Next time, you can start from the point your left by first loading the images and then importing the CSV file (downloaded in step 7) by clicking <b>[Annotation > Import]</b>.
+            </li></ol>
+          </div>
 
-	  </div>
-	  
+          <div class="text_panel" id="license_panel">
+            <pre>
+  Copyright (c) 2016-2017, Abhishek Dutta.
+  All rights reserved.
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+  Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;
+  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  POSSIBILITY OF SUCH DAMAGE.
+            </pre>
+          </div>
+
         </div>
       </div>
     </div>
 
-    <!-- Bottom panel is used to display attributes input panel -->    
+    <!-- Bottom panel is used to display attributes input panel -->
     <div id="bottom_panel">
       <div id="attributes_panel"></div>
     </div>
@@ -646,10 +691,10 @@
       //<!--AUTO_INSERT_VIA_JS_HERE-->
     </script>
 
-    <!--
+    <!--    -->
     <script type="text/javascript" src="via.js"></script>
     <script type="text/javascript" src="dmiat.js"></script>
     <script type="text/javascript" src="github_auth.js"></script>
-    -->
+
   </body>
 </html>
