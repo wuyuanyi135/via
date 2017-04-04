@@ -19,15 +19,27 @@ VGG Image Annotator : Visual Geometry Group
     zoom: 1;
 }
 .section {
-  display: table; padding: 2em;
+  display: block; 
+  padding: 0;
+  width: 100%;
+  margin: 1em;
 }
-.section_img {
-  display: table-cell;
+.section_block {
+  display: inline-block;
+  width: 48%;
+  vertical-align: top;
+}
+
+.section_block ul {
+  padding: 0;
+  margin: 0;
+  line-height: 1.4em;
+}
+.section_block img {
+  margin: 1em;
   border: 1px solid black;
 }
-.section_text {
-  display: table-cell; vertical-align: middle; line-height: 1.6em;
-}
+
 </style>
 
 <script type="text/javascript" src="/~vgg/include/usecookies.js"></script>
@@ -40,6 +52,7 @@ VGG Image Annotator : Visual Geometry Group
   })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
   ga('create', 'UA-20555581-2', 'auto');
+  ga('set', 'page', 'software/via/index.html');
   ga('send', 'pageview');
 
 </script>
@@ -117,45 +130,38 @@ Features:
 
 <h3>Downloads</h3>
 <div class="section">
-  <div class="section_img">
+  <div class="section_block">
     <a href="via_demo.html"><img src="./images/via_screenshot_400x400.png" title="Online demo of VIA application" border="0"></a>
+
+    <ul>
+      <li><b>Usage</b>: for generic image annotation tasks</li>
+      <li><a href="./downloads/via-1.0.0.zip">via-1.0.0.zip</a> : includes the VIA application (&lt; 200KB) and its demo</li>
+      <li><a href="./downloads/via-src-1.0.0.zip">via-src-1.0.0.zip</a> : source code and <a href="https://gitlab.com/vgg/via/blob/master/CodeDoc.md">code documentation</a></li>
+      <li><a href="via.html">via.html</a> : online version of VIA application</li>
+      <li><a href="via_demo.html">via_demo.html</a> : live online demo (with preloadd images and regions)</li>
+      <li><a href="https://gitlab.com/vgg/via/">https://gitlab.com/vgg/via/</a> : source code repository</li>
+    </ul>
   </div>
 
-  <div class="section_text">
-  <ul>
-    <li><b>Usage</b>: for generic image annotation tasks</li>
-    <li><a href="./downloads/via-1.0.0.zip">via-1.0.0.zip</a> : includes the VIA application (&lt; 200KB) and its demo</li>
-    <li><a href="./downloads/via-source-1.0.0.zip">via-source-1.0.0.zip</a> : source code and <a href="https://gitlab.com/vgg/via/blob/master/CodeDoc.md">code documentation</a></li>
-    <li><a href="via.html">via.html</a> : online version of VIA application</li>
-    <li><a href="via_demo.html">via_demo.html</a> : live online demo (with preloadd images and regions)</li>
-    <li><a href="https://gitlab.com/vgg/via/">https://gitlab.com/vgg/via/</a> : source code repository</li>
-  </ul>
+  <div class="section_block">
   </div>
-</div>
 
-<div class="section">
-  <div class="section_img">
+  <div class="section_block">
     <img src="./images/via_face_screenshot_400x400.png" title="Online demo of VGG Face Annotator application" border="0">
+
+    <ul>
+      <li><b>Usage</b>: annotating facial regions</li>
+      <li><i>Coming soon</i></li>
+    </ul>
   </div>
 
-  <div class="section_text">
-  <ul>
-    <li>Use: annotating facial regions</li>
-    <li><i>Coming soon</i></li>
-  </ul>
-  </div>
-</div>
-
-<div class="section">
-  <div class="section_img">
+  <div class="section_block">
     <img src="./images/via_15c_bt_screenshot_400x400.png" title="VIA being used to annotate 15th century books" border="0"></a>
-  </div>
 
-  <div class="section_text">
-  <ul>
-    <li><b>Usage</b>: annotation of 15th century books</li>
-    <li>The VIA application is used without any modification in <a href="http://www.mod-langs.ox.ac.uk/research/15cbooktrade">this project</a>.</li>
-  </ul>
+    <ul>
+      <li><b>Usage</b>: annotation of 15th century books</li>
+      <li>The VIA application is used without any modification in <a href="http://www.mod-langs.ox.ac.uk/research/15cbooktrade">this project</a>.</li>
+    </ul>
   </div>
 </div>
 
@@ -198,7 +204,7 @@ For all other queries, please contact <a href="mailto:REMOVE_ME_adutta@robots.ox
 <div id="footbar">
 Page maintained by <a href="mailto:vgg-webmasters@robots.ox.ac.takethisout.uk"><tt>vgg-webmasters</tt></a> at the <tt>robots.ox.ac.uk</tt> domain.
 <br>
-Last updated: March 2017.
+Last updated: April 2017.
 </div>
 
 </body>
