@@ -19,14 +19,12 @@ VGG Image Annotator : Visual Geometry Group
     zoom: 1;
 }
 .section {
-  display: block; 
+  display: table; 
   padding: 0;
-  width: 100%;
-  margin: 1em;
 }
 .section_block {
-  display: inline-block;
-  width: 48%;
+  display: table-cell;
+  padding: 1em;
   vertical-align: top;
 }
 
@@ -36,7 +34,7 @@ VGG Image Annotator : Visual Geometry Group
   line-height: 1.4em;
 }
 .section_block img {
-  margin: 1em;
+
   border: 1px solid black;
 }
 
@@ -129,11 +127,13 @@ Features:
 </p>
 
 <h3>Downloads</h3>
-<div class="section">
-  <div class="section_block">
-    <a href="via_demo.html"><img src="./images/via_screenshot_400x400.png" title="Online demo of VIA application" border="0"></a>
+<div style="display: table; padding: 1em; margin-bottom: 2em;">
+  <div style="display: table-cell; vertical-align: top;">
+    <a href="via_demo.html"><img style="border: 1px solid black;" src="./images/via_screenshot_400x400.png" title="Online demo of VIA application" border="0"></a>
+  </div>
 
-    <ul>
+  <div style="display: table-cell; vertical-align: middle; line-height: 1.6em;">
+    <ul style="padding: 0;">
       <li><b>Usage</b>: for generic image annotation tasks</li>
       <li><a href="./downloads/via-1.0.0.zip">via-1.0.0.zip</a> : includes the VIA application (&lt; 200KB) and its demo</li>
       <li><a href="./downloads/via-src-1.0.0.zip">via-src-1.0.0.zip</a> : source code and <a href="https://gitlab.com/vgg/via/blob/master/CodeDoc.md">code documentation</a></li>
@@ -142,10 +142,9 @@ Features:
       <li><a href="https://gitlab.com/vgg/via/">https://gitlab.com/vgg/via/</a> : source code repository</li>
     </ul>
   </div>
+</div>
 
-  <div class="section_block">
-  </div>
-
+<div class="section">
   <div class="section_block">
     <img src="./images/via_face_screenshot_400x400.png" title="Online demo of VGG Face Annotator application" border="0">
 
