@@ -944,7 +944,7 @@
     var VIA_REGION_POINT_RADIUS = 3;
     var VIA_POLYGON_VERTEX_MATCH_TOL = 5;
     var VIA_REGION_MIN_DIM = 3;
-    var VIA_MOUSE_CLICK_TOL = 2;
+    var VIA_MOUSE_CLICK_TOL = 10; // modified to make it less sensitive
     var VIA_ELLIPSE_EDGE_TOL = 0.2; // euclidean distance
     var VIA_THETA_TOL = Math.PI / 18; // 10 degrees
     var VIA_POLYGON_RESIZE_VERTEX_OFFSET = 100;
@@ -3518,7 +3518,10 @@
     }
 
     function is_inside_this_region(px, py, region_id) {
-        var attr = _via_canvas_regions[region_id].shape_attributes;
+        // bugfix
+        var _attr = _via_canvas_regions[region_id];
+        if(!_attr) return false;
+        var attr = _attr.shape_attributes;
         var result = false;
         switch (attr['name']) {
             case VIA_REGION_SHAPE.RECT:
