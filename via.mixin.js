@@ -34,9 +34,9 @@ function injectScript(src) {
 	});
 }
 
-function injectAlertifyCss() {
+function injectCss(url) {
 	var link = document.createElement("link");
-	link.href = "alertify.css";
+	link.href = url;
 	link.type = "text/css";
 	link.rel = "stylesheet";
 	document.getElementsByTagName("head")[0].appendChild(link);
@@ -162,8 +162,16 @@ function syncWithLocalStorage(controller) {
 		}
 	})
 }
+
+function summonDialog() {
+	var bbox = _via_reg_canvas.getBoundingClientRect();
+	var x = _via_click_x1 + bbox.x;
+	var y = _via_click_y1 + bbox.y;
+	$("#param_dialog").dialog( "option", "position", [x,y]);
+}
+
 function injectionMain() {
-	injectAlertifyCss();
+	injectCss("alertify.css");
 	injectScript("alertify.js").then(() => {
 		alertify.logPosition("bottom right");
 		alertify.success("Via mixin has been injected!");
@@ -172,6 +180,12 @@ function injectionMain() {
 	injectScript("jquery-3.3.1.min.js").then(() => {
 		console.log('jQuery library loaded');
 	});
+
+	injectCss("jquery-ui.css");
+	injectScript("jquery-ui.js").then(() => {
+		console.log('jQuery-ui library loaded');
+	});
+
 
 	// use dat.gui for setting
 	injectScript("dat.gui.js").then(() => {
