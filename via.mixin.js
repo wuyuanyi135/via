@@ -167,7 +167,7 @@ function summonDialog() {
 	var bbox = _via_reg_canvas.getBoundingClientRect();
 	var x = _via_click_x1 + bbox.x;
 	var y = _via_click_y1 + bbox.y;
-	$("#param_dialog").dialog( "option", "position", [x,y]);
+	$("#param_dialog").dialog().position({my: "center", at: "center", of: new Event({pageX: x, pageY:y})});
 }
 
 function injectionMain() {
