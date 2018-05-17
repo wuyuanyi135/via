@@ -63,22 +63,22 @@ function shortCutHandler(e) {
 
 	if (assertKey(e, 87)) {
 		// W
-		wsadScroll(-200, 0);
+		wsadScroll(-mixinConfig.keyboardMovementSpeed, 0);
 	};
 
 	if (assertKey(e, 83)) {
 		// S
-		wsadScroll(200, 0);
+		wsadScroll(mixinConfig.keyboardMovementSpeed, 0);
 	};
 
 	if (assertKey(e, 65)) {
 		// A
-		wsadScroll(0, -200);
+		wsadScroll(0, -mixinConfig.keyboardMovementSpeed);
 	};
 
 	if (assertKey(e, 68)) {
 		// D
-		wsadScroll(0, 200);
+		wsadScroll(0, mixinConfig.keyboardMovementSpeed);
 	};
 }
 
@@ -98,12 +98,49 @@ function patchZoom() {
 	}
 }
 
+function MixinConfiguration() {
+	this.keyboardMovementSpeed = 200;
+}
+mixinConfig = new MixinConfiguration();
+
+function makeSettingPannel() {
+	gui = new dat.GUI();
+
+	syncWithLocalStorage(gui.add(mixinConfig, 'keyboardMovementSpeed', 0));
+	gui.close();
+}
+
+function syncWithLocalStorage(controller) {
+	if (localStorage) {
+		var restoredValue = localStorage.getItem(controller.property);
+		if (restoredValue)
+			controller.setValue(restoredValue);
+	}
+		
+	controller.onChange(function (value) {
+		if(localStorage) {
+			localStorage.setItem(controller.property, JSON.stringify(value))
+		}
+	})
+}
 function injectionMain() {
 	injectAlertifyCss();
 	injectScript("alertify.js").then(() => {
-		alertify.logPosition("top right");
+		alertify.logPosition("bottom right");
 		alertify.success("Via mixin has been injected!");
 	});
+
+	// use dat.gui for setting
+	injectScript("dat.gui.js").then(() => {
+		console.log('dat.gui library loaded');
+		var css = document.createElement("style");
+		css.type = "text/css";
+		css.innerHTML = ".dg.ac { z-index: 99999 }";
+		document.body.appendChild(css);
+		makeSettingPannel();
+	});
+
+
 
 
 	// inject shortcuts
