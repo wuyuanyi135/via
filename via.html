@@ -966,6 +966,8 @@
     var VIA_CSV_KEYVAL_SEP = ':';
     var VIA_IMPORT_CSV_COMMENT_CHAR = '#';
 
+    var _via_canvas_bbox = {};  // save the bbox on resizing to improve the performance.
+
     var _via_img_metadata = {};   // data structure to store loaded images metadata
     var _via_img_count = 0;    // count of the loaded images
     var _via_canvas_regions = []; // image regions spec. in canvas space
@@ -2238,7 +2240,7 @@
     // user clicks on the canvas
     _via_reg_canvas.addEventListener('mousedown', function (e) {
         // possible bug caused by offsetX
-        var bbox = _via_reg_canvas.getBoundingClientRect();
+        var bbox = _via_canvas_bbox;
         _via_click_x0 = e.clientX - bbox.x;
         _via_click_y0 = e.clientY - bbox.y;
         // _via_click_x0 = e.offsetX;
@@ -2298,7 +2300,7 @@
     //  - moving/resizing/select/unselect existing region
     _via_reg_canvas.addEventListener('mouseup', function (e) {
         // possible bug caused by offsetX
-        var bbox = _via_reg_canvas.getBoundingClientRect();
+        var bbox = _via_canvas_bbox;
         _via_click_x1 = e.clientX - bbox.x;
         _via_click_y1 = e.clientY - bbox.y;
         // _via_click_x1 = e.offsetX; _via_click_y1 = e.offsetY;
@@ -3855,7 +3857,7 @@
 
             _via_is_window_resized = true;
             show_image(_via_image_index);
-
+            _via_canvas_bbox = _via_reg_canvas.getBoundingClientRect();
             if (_via_is_canvas_zoomed) {
                 reset_zoom_level();
             }

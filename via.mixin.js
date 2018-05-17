@@ -4,13 +4,13 @@ function closePolygon() {
 	// if user is not edting a polygon, exit.
 	if (!_via_is_user_drawing_polygon) return;
 
-	var currentRegion = _via_canvas_regions[_via_canvas_regions.length - 1];
-	var computedX0 = currentRegion.shape_attributes.all_points_x[0];
-	var computedY0 = currentRegion.shape_attributes.all_points_y[0];
+    const currentRegion = _via_canvas_regions[_via_canvas_regions.length - 1];
+    const computedX0 = currentRegion.shape_attributes.all_points_x[0];
+    const computedY0 = currentRegion.shape_attributes.all_points_y[0];
 
-	var bbox = _via_reg_canvas.getBoundingClientRect();
+    const bbox = _via_canvas_bbox;
 
-	// hack the mousedown because via checks it
+    // hack the mousedown because via checks it
 	_via_reg_canvas.dispatchEvent(new MouseEvent('mousedown', { clientX: computedX0 + bbox.x, clientY: computedY0 + bbox.y }));
 	_via_reg_canvas.dispatchEvent(new MouseEvent('mouseup', { clientX: computedX0 + bbox.x, clientY: computedY0 + bbox.y }));
 	alertify.success("Polygon path closed");
@@ -35,8 +35,8 @@ function injectScript(src) {
 }
 
 function injectCss(url) {
-	var link = document.createElement("link");
-	link.href = url;
+    const link = document.createElement("link");
+    link.href = url;
 	link.type = "text/css";
 	link.rel = "stylesheet";
 	document.getElementsByTagName("head")[0].appendChild(link);
@@ -44,14 +44,14 @@ function injectCss(url) {
 
 function assertKey(e, keycode) {
 	if (keycode >= 97 && keycode <= 122) {
-		return (e.which == keycode || e.keyCode == keycode || e.keyCode == keycode - 32 || e.which == keycode - 32);
+		return (e.which === keycode || e.keyCode === keycode || e.keyCode === keycode - 32 || e.which === keycode - 32);
 	}
 
 	if (keycode >= 65 && keycode <= 90) { // A to Z
-		return (e.which == keycode || e.keyCode == keycode || e.keyCode == keycode + 32 || e.which == keycode + 32);
+		return (e.which === keycode || e.keyCode === keycode || e.keyCode === keycode + 32 || e.which === keycode + 32);
 	}
 
-	return e.which == keycode || e.keyCode == keycode;
+	return e.which === keycode || e.keyCode === keycode;
 
 }
 function shortCutHandler(e) {
@@ -64,22 +64,21 @@ function shortCutHandler(e) {
 	if (assertKey(e, 87)) {
 		// W
 		wsadScroll(-mixinConfig.keyboardMovementSpeed, 0);
-	};
+	}
 
 	if (assertKey(e, 83)) {
 		// S
 		wsadScroll(mixinConfig.keyboardMovementSpeed, 0);
-	};
+	}
 
 	if (assertKey(e, 65)) {
 		// A
 		wsadScroll(0, -mixinConfig.keyboardMovementSpeed);
-	};
-
-	if (assertKey(e, 68)) {
+    }
+    if (assertKey(e, 68)) {
 		// D
 		wsadScroll(0, mixinConfig.keyboardMovementSpeed);
-	};
+    }
 }
 
 function patchZoom() {
@@ -88,7 +87,7 @@ function patchZoom() {
 	zoom_in = function () {
 		if (!_via_is_user_drawing_polygon)
 			_zoom_in();
-	}
+	};
 
 	_zoom_out = zoom_out.bind({});
 
@@ -115,7 +114,7 @@ function makeSettingPannel() {
 }
 
 function loadAnnotationMeta() {
-	var url = mixinConfig.metaUrl;
+	let url = mixinConfig.metaUrl;
 	if (url) {
 		// remove leading and trailing quotes
 		url = url.replace(/['"]+/g, '');
@@ -164,10 +163,10 @@ function syncWithLocalStorage(controller) {
 }
 
 function summonDialog() {
-	var bbox = _via_reg_canvas.getBoundingClientRect();
-	var x = _via_click_x1 + bbox.x;
-	var y = _via_click_y1 + bbox.y;
-	$("#param_dialog").dialog().position({my: "center", at: "center", of: new Event({pageX: x, pageY:y})});
+    const bbox = _via_reg_canvas.getBoundingClientRect();
+    const x = _via_click_x1 + bbox.x;
+    const y = _via_click_y1 + bbox.y;
+    $("#param_dialog").dialog().position({my: "center", at: "center", of: new Event({pageX: x, pageY:y})});
 }
 
 function injectionMain() {
@@ -190,8 +189,8 @@ function injectionMain() {
 	// use dat.gui for setting
 	injectScript("dat.gui.js").then(() => {
 		console.log('dat.gui library loaded');
-		var css = document.createElement("style");
-		css.type = "text/css";
+        const css = document.createElement("style");
+        css.type = "text/css";
 		css.innerHTML = ".dg.ac { z-index: 99999 }";
 		document.body.appendChild(css);
 		makeSettingPannel();
