@@ -2249,8 +2249,8 @@
     _via_reg_canvas.addEventListener('mousedown', function (e) {
         // possible bug caused by offsetX
         var bbox = _via_canvas_bbox;
-        _via_click_x0 = e.clientX - bbox.x;
-        _via_click_y0 = e.clientY - bbox.y;
+        _via_click_x0 = e.pageX - bbox.x;
+        _via_click_y0 = e.pageY - bbox.y;
         // _via_click_x0 = e.offsetX;
         // _via_click_y0 = e.offsetY;
         _via_region_edge = is_on_region_corner(_via_click_x0, _via_click_y0);
@@ -2309,8 +2309,8 @@
     _via_reg_canvas.addEventListener('mouseup', function (e) {
         // possible bug caused by offsetX
         var bbox = _via_canvas_bbox;
-        _via_click_x1 = e.clientX - bbox.x;
-        _via_click_y1 = e.clientY - bbox.y;
+        _via_click_x1 = e.pageX - bbox.x;
+        _via_click_y1 = e.pageY - bbox.y;
         // _via_click_x1 = e.offsetX; _via_click_y1 = e.offsetY;
 
         var click_dx = Math.abs(_via_click_x1 - _via_click_x0);
