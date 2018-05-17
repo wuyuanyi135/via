@@ -2044,6 +2044,7 @@
 
     function show_all_canvas() {
         canvas_panel.style.display = 'inline-block';
+        _via_canvas_bbox = _via_reg_canvas.getBoundingClientRect();
     }
 
     function hide_all_canvas() {
@@ -3857,7 +3858,6 @@
 
             _via_is_window_resized = true;
             show_image(_via_image_index);
-            _via_canvas_bbox = _via_reg_canvas.getBoundingClientRect();
             if (_via_is_canvas_zoomed) {
                 reset_zoom_level();
             }
