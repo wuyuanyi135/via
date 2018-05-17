@@ -100,14 +100,53 @@ function patchZoom() {
 
 function MixinConfiguration() {
 	this.keyboardMovementSpeed = 200;
+	this.metaUrl = "";
 }
 mixinConfig = new MixinConfiguration();
 
 function makeSettingPannel() {
 	gui = new dat.GUI();
+	gui.close();
 
 	syncWithLocalStorage(gui.add(mixinConfig, 'keyboardMovementSpeed', 0));
-	gui.close();
+	syncWithLocalStorage(gui.add(mixinConfig, 'metaUrl'));
+
+	loadAnnotationMeta();
+}
+
+function loadAnnotationMeta() {
+	var url = mixinConfig.metaUrl;
+	if (url) {
+		// remove leading and trailing quotes
+		url = url.replace(/['"]+/g, '');
+		$.ajax({
+			url: url,
+			dataType: 'json'
+		})
+			.done(function (meta) {
+				// add new file attributes
+				var fileAttr = meta.fileAttribute;
+				Object.keys(fileAttr).map((v) => {
+					// bypass the add_new_attribution because it updates ui.
+					if (!_via_file_attributes.hasOwnProperty(v)) {
+						_via_file_attributes[v] = true;
+					}
+				});
+
+				var regionAttr = meta.regionAttribute;
+				Object.keys(regionAttr).map((v) => {
+					// bypass the add_new_attribution because it updates ui.
+					if (!_via_region_attributes.hasOwnProperty(v)) {
+						_via_region_attributes[v] = true;
+					}
+				});
+			})
+			.fail(function (err) {
+				console.error(err);
+				alertify.error(JSON.stringify(err));
+			});
+	}
+
 }
 
 function syncWithLocalStorage(controller) {
@@ -116,9 +155,9 @@ function syncWithLocalStorage(controller) {
 		if (restoredValue)
 			controller.setValue(restoredValue);
 	}
-		
+
 	controller.onChange(function (value) {
-		if(localStorage) {
+		if (localStorage) {
 			localStorage.setItem(controller.property, JSON.stringify(value))
 		}
 	})
@@ -128,6 +167,10 @@ function injectionMain() {
 	injectScript("alertify.js").then(() => {
 		alertify.logPosition("bottom right");
 		alertify.success("Via mixin has been injected!");
+	});
+
+	injectScript("jquery-3.3.1.min.js").then(() => {
+		console.log('jQuery library loaded');
 	});
 
 	// use dat.gui for setting

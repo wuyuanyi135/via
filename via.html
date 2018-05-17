@@ -954,6 +954,10 @@ function ImageRegion() {
   this.region_attributes = {}; // region attributes
 }
 
+function dispatchRegionSelectedEvent() {
+  window.dispatchEvent(new Event('region_selected'));
+}
+
 //
 // Initialization routine
 //
@@ -2028,6 +2032,7 @@ function select_only_region(region_id) {
 function set_region_select_state(region_id, is_selected) {
   _via_canvas_regions[region_id].is_user_selected = is_selected;
   _via_img_metadata[_via_image_id].regions[region_id].is_user_selected = is_selected;
+  dispatchRegionSelectedEvent();
 }
 function toggle_accordion_panel(e) {
   e.classList.toggle('active');
@@ -2210,6 +2215,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
         _via_user_sel_region_id = nested_region_id;
         _via_is_region_selected = true;
         _via_is_user_moving_region = false;
+        dispatchRegionSelectedEvent();
 
         // de-select all other regions if the user has not pressed Shift
         if ( !e.shiftKey ) {
@@ -2492,6 +2498,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
     original_img_region.is_user_selected = true;
     canvas_img_region.is_user_selected = true;
     _via_is_region_selected = true;
+    dispatchRegionSelectedEvent();
     _via_user_sel_region_id = _via_canvas_regions.length; // new region's id
 
     if ( region_dx > VIA_REGION_MIN_DIM ||
@@ -4413,7 +4420,8 @@ function toggle_attributes_input_panel() {
 }
 
 function toggle_reg_attr_panel() {
-  if ( _via_current_image_loaded ) {
+  // bug fix: not allow region attribution panel to be opened when no annotation exists.
+  if ( _via_current_image_loaded && _via_canvas_regions.length >0) {
     var panel = document.getElementById('reg_attr_panel_button');
     panel.classList.toggle('active');
     if ( _via_is_attributes_panel_visible ) {
