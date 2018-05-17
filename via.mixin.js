@@ -88,8 +88,39 @@ function shortCutHandler(e) {
         // D
         wsadScroll(0, mixinConfig.keyboardMovementSpeed);
     }
-}
 
+    if ((e.keyCode >= 48 && e.keyCode <= 57) || (e.which >= 48 && e.which <= 57)) {
+        // attribute selection shortcut
+        var code = e.keyCode || e.which;
+        keyboardAttributionShortcut(code-48);
+    }
+}
+function keyboardAttributionShortcut(key) {
+    // check whether the dialog is on
+    const dialogSelector = $('#param_dialog');
+    if (!dialogSelector.dialog('isOpen')) return;
+    if (key === 0) key = 10;
+    try {
+        let fs = $('#param_dialog fieldset')[key - 1];
+        let checkedObj = $(fs).find('input:checked');
+        if (!checkedObj.length) {
+            // nothing checked yet, select the first one.
+            $(fs).find('input')[0].click();
+        } else
+        {
+            // check the next one
+            let nextObj = checkedObj.nextAll('input').first();
+            if (!nextObj.length) {
+                // circular
+                $(fs).find('input')[0].click();
+            } else {
+                nextObj.click();
+            }
+        }
+    } catch (e) {
+        alertify.error(`${key} is out of the range`);
+    }
+}
 function patchZoom() {
     _zoom_in = zoom_in.bind({});
 
