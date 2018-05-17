@@ -4424,7 +4424,10 @@ function toggle_reg_attr_panel() {
         _via_reg_canvas.focus();
         // add horizontal spacer to allow scrollbar
         var hs = document.getElementById('horizontal_space');
-        hs.style.height = attributes_panel.offsetHeight+'px';
+
+        // bug fix: style not found.
+        if (hs)
+          hs.style.height = attributes_panel.offsetHeight+'px';
 
       } else {
         update_region_attributes_input_panel();
