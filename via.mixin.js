@@ -169,6 +169,21 @@ function summonDialog() {
     $("#param_dialog").dialog().position({my: "center", at: "center", of: new Event({pageX: x, pageY:y})});
 }
 
+function initializeDialog() {
+    $("#param_dialog").dialog({
+		autoOpen: false,
+		position: [0,0]
+    });
+    window.addEventListener('region_selected',
+		() => $("#param_dialog")
+			.dialog('option', 'position',{
+                my: 'center',
+                at: `left+${Math.round(_via_click_x1)} top+${Math.round(_via_click_y1)}`,
+                of: _via_reg_canvas
+            })
+			.dialog('open')
+	);
+}
 function injectionMain() {
 	injectCss("alertify.css");
 	injectScript("alertify.js").then(() => {
@@ -183,6 +198,7 @@ function injectionMain() {
 	injectCss("jquery-ui.css");
 	injectScript("jquery-ui.js").then(() => {
 		console.log('jQuery-ui library loaded');
+		initializeDialog();
 	});
 
 
