@@ -150,8 +150,6 @@ function makeSettingPannel() {
 
     syncWithLocalStorage(gui.add(mixinConfig, 'keyboardMovementSpeed', 0));
     syncWithLocalStorage(gui.add(mixinConfig, 'metaUrl'));
-
-    loadAnnotationMeta();
 }
 
 function loadAnnotationMeta() {
@@ -231,60 +229,64 @@ function updateDialogContent() {
     const fileAttrSectionSelector = $("#file_attr_section");
     regionAttrSectionSelector.empty();
     fileAttrSectionSelector.empty();
+    try {
+        Object.keys(_via_mixin_attribution_meta.regionAttribute).forEach((v) => {
+            let ret = $('<div></div>');
+            ret.append(`<h2>${v}</h2>`);
+            let fs = $('<fieldset></fieldset>');
+            ret.append(fs);
+            let options = _via_mixin_attribution_meta.regionAttribute[v];
+            options.forEach((cur) => {
+                let val = cur;
+                let idName = cur.replace(/\s+/g, '-').toLowerCase();
+                let idGroup = v.replace(/\s+/g, '-').toLowerCase();
 
-    Object.keys(_via_mixin_attribution_meta.regionAttribute).forEach((v) => {
-        let ret = $('<div></div>');
-        ret.append(`<h2>${v}</h2>`);
-        let fs = $('<fieldset></fieldset>');
-        ret.append(fs);
-        let options = _via_mixin_attribution_meta.regionAttribute[v];
-        options.forEach((cur) => {
-            let val = cur;
-            let idName = cur.replace(/\s+/g, '-').toLowerCase();
-            let idGroup = v.replace(/\s+/g, '-').toLowerCase();
+                fs.append(`<label for="${'region-' + idGroup + '-' + idName}"> ${val} </label>`);
+                let input = $(`<input type="radio" name="${'region-' + idGroup}" id="${'region-' + idGroup + '-' + idName}">`);
+                if (val === getRegionAttributeByGroup(v)) {
+                    input.prop('checked', true);
+                }
+                input.on('change', e => {
+                    if (e.target.checked)
+                        updateRegionAttribute(v, val);
+                });
+                fs.append(input);
 
-            fs.append(`<label for="${'region-' + idGroup + '-' + idName}"> ${val} </label>`);
-            let input = $(`<input type="radio" name="${'region-' + idGroup}" id="${'region-' + idGroup + '-' + idName}">`);
-            if (val === getRegionAttributeByGroup(v)) {
-                input.prop('checked', true);
-            }
-            input.on('change', e => {
-                if (e.target.checked)
-                    updateRegionAttribute(v, val);
             });
-            fs.append(input);
-
+            regionAttrSectionSelector.append(ret);
         });
-        regionAttrSectionSelector.append(ret);
-    });
 
-    Object.keys(_via_mixin_attribution_meta.fileAttribute).forEach((v) => {
-        let ret = $('<div></div>');
-        ret.append(`<h2>${v}</h2>`);
-        let fs = $('<fieldset></fieldset>');
-        ret.append(fs);
-        const options = _via_mixin_attribution_meta.fileAttribute[v];
-        options.forEach((cur) => {
-            let val = cur;
-            let idName = cur.replace(/\s+/g, '-').toLowerCase();
-            let idGroup = v.replace(/\s+/g, '-').toLowerCase();
+        Object.keys(_via_mixin_attribution_meta.fileAttribute).forEach((v) => {
+            let ret = $('<div></div>');
+            ret.append(`<h2>${v}</h2>`);
+            let fs = $('<fieldset></fieldset>');
+            ret.append(fs);
+            const options = _via_mixin_attribution_meta.fileAttribute[v];
+            options.forEach((cur) => {
+                let val = cur;
+                let idName = cur.replace(/\s+/g, '-').toLowerCase();
+                let idGroup = v.replace(/\s+/g, '-').toLowerCase();
 
-            fs.append(`<label for="${'file-' + idGroup + '-' + idName}"> ${val} </label>`);
-            let input = $(`<input type="radio" name="${'file-' + idGroup}" id="${'file-' + idGroup + '-' + idName}">`);
-            if (val === getFileAttributeByGroup(v)) {
-                input.prop('checked', true);
-            }
-            input.on('change', e => {
-                if (e.target.checked)
-                    updateFileAttribute(v, val);
+                fs.append(`<label for="${'file-' + idGroup + '-' + idName}"> ${val} </label>`);
+                let input = $(`<input type="radio" name="${'file-' + idGroup}" id="${'file-' + idGroup + '-' + idName}">`);
+                if (val === getFileAttributeByGroup(v)) {
+                    input.prop('checked', true);
+                }
+                input.on('change', e => {
+                    if (e.target.checked)
+                        updateFileAttribute(v, val);
+                });
+                fs.append(input);
             });
-            fs.append(input);
+            fileAttrSectionSelector.append(ret);
         });
-        fileAttrSectionSelector.append(ret);
-    });
 
-    // initialize all inputs
-    $("#param_dialog input").checkboxradio();
+        // initialize all inputs
+        $("#param_dialog input").checkboxradio();
+    } catch (e) {
+        $("param_dialog").dialog("close");
+    }
+
 }
 
 function initializeDialog() {
@@ -294,6 +296,7 @@ function initializeDialog() {
         autoOpen: false,
         width: 400,
         modal: false
+        //appendTo: '#display_area'
     });
 
     // Listen for document click to close non-modal dialog
@@ -316,7 +319,8 @@ function initializeDialog() {
                 .dialog('option', 'position', {
                     my: 'left center',
                     at: `left+${Math.round(_via_current_x) + 10} top+${Math.round(_via_current_y)}`,
-                    of: _via_reg_canvas
+                    of: _via_reg_canvas,
+                    collision: 'none'
                 })
                 .dialog('open');
         }
@@ -338,22 +342,23 @@ function injectionMain() {
             console.log('jQuery-ui library loaded');
             initializeDialog();
         });
+
+        // use dat.gui for setting
+        injectScript("dat.gui.js").then(() => {
+            console.log('dat.gui library loaded');
+            const css = document.createElement("style");
+            css.type = "text/css";
+            css.innerHTML = ".dg.ac { z-index: 99999 }";
+            document.body.appendChild(css);
+            makeSettingPannel();
+            loadAnnotationMeta();
+        });
     });
 
 
     injectCss("jquery-ui.css");
     injectCss("jquery-ui.structure.css");
     injectCss("jquery-ui.theme.css");
-
-    // use dat.gui for setting
-    injectScript("dat.gui.js").then(() => {
-        console.log('dat.gui library loaded');
-        const css = document.createElement("style");
-        css.type = "text/css";
-        css.innerHTML = ".dg.ac { z-index: 99999 }";
-        document.body.appendChild(css);
-        makeSettingPannel();
-    });
 
     // inject shortcuts
     window.addEventListener('keydown', shortCutHandler);
