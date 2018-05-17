@@ -86,14 +86,14 @@ function patchZoom() {
 	_zoom_in = zoom_in.bind({});
 
 	zoom_in = function () {
-		if (!_via_is_user_drawing_polygon && !_via_is_user_drawing_region)
+		if (!_via_is_user_drawing_polygon)
 			_zoom_in();
 	}
 
 	_zoom_out = zoom_out.bind({});
 
 	zoom_out = function () {
-		if (!_via_is_user_drawing_polygon && !_via_is_user_drawing_region)
+		if (!_via_is_user_drawing_polygon)
 			_zoom_out();
 	}
 }
