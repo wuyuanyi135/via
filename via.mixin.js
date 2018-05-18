@@ -315,6 +315,7 @@ function initializeDialog() {
     // open dialog when region selected
     window.addEventListener('region_selected',
         () => {
+            if(_via_user_sel_region_id < 0) return;
             dialogSelector
                 .dialog('option', 'position', {
                     my: 'left center',
