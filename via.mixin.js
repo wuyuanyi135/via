@@ -318,7 +318,7 @@ function initializeDialog() {
             // if(_via_user_sel_region_id < 0) return;
             dialogSelector
                 .dialog('option', 'position', {
-                    my: 'left center',
+                    my: 'left top',
                     at: `left+${Math.round(_via_current_x) + 10} top+${Math.round(_via_current_y)}`,
                     of: _via_reg_canvas,
                     collision: 'none'
