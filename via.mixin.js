@@ -327,6 +327,23 @@ function initializeDialog() {
     );
 }
 
+function patchSelectWithTableHeader() {
+
+    // patch update_region_attributes_input_panel function 
+    const _update_region_attributes_input_panel = update_region_attributes_input_panel.bind({});
+
+    update_region_attributes_input_panel = function () {
+        _update_region_attributes_input_panel();
+        $('#attributes_panel_table > tbody > tr > td:nth-child(1)').on('click', (e) => {
+            try {
+                let id = parseInt(e.target.innerHTML);
+                select_only_region(id-1);
+            } catch (e) {}
+        });
+    }
+
+    
+}
 function injectionMain() {
     injectCss("mixin.css");
 
@@ -353,6 +370,8 @@ function injectionMain() {
             makeSettingPannel();
             loadAnnotationMeta();
         });
+
+        patchSelectWithTableHeader();
     });
 
 
