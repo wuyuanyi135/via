@@ -65,41 +65,61 @@ function assertKey(e, keycode) {
 
 function shortCutHandler(e) {
     e = e || window.event;
-    if (assertKey(e, 67) && e.ctrlKey) {
-        // Ctrl + C
-        closePolygon();
+    //Right handed panning.
+    if (assertKey(e, 87) && mixinConfig.leftHandedMode === false) {
+        // W, up
+        wsadScroll(-mixinConfig.keyboardMovementSpeed, 0)
     }
-
-    if (assertKey(e, 87)) {
-        // W
-        wsadScroll(-mixinConfig.keyboardMovementSpeed, 0);
-    }
-
-    if (assertKey(e, 83)) {
-        // S
+    if (assertKey(e, 83) && mixinConfig.leftHandedMode === false) {
+        // S, down
         wsadScroll(mixinConfig.keyboardMovementSpeed, 0);
     }
-
-    if (assertKey(e, 65)) {
-        // A
+        if (assertKey(e, 65) && mixinConfig.leftHandedMode === false) {
+        // A, left
         wsadScroll(0, -mixinConfig.keyboardMovementSpeed);
     }
-    if (assertKey(e, 68)) {
-        // D
+    if (assertKey(e, 68) && mixinConfig.leftHandedMode === false) {
+        // D, right
         wsadScroll(0, mixinConfig.keyboardMovementSpeed);
     }
-
+    
+    //Left handed mode panning.
+    if (assertKey(e, 73) && mixinConfig.leftHandedMode === true) {
+        // I, up
+        wsadScroll(-mixinConfig.keyboardMovementSpeed, 0)
+    }
+    if (assertKey(e, 75) && mixinConfig.leftHandedMode === true) {
+        // K, down
+        wsadScroll(mixinConfig.keyboardMovementSpeed, 0);
+    }
+    if (assertKey(e, 74) && mixinConfig.leftHandedMode === true) {
+        // J, left
+        wsadScroll(0, -mixinConfig.keyboardMovementSpeed)
+    }
+    if (assertKey(e, 76) && mixinConfig.leftHandedMode === true) {
+        // L, right
+        wsadScroll(0, mixinConfig.keyboardMovementSpeed);
+    }
+    
     if ((e.keyCode >= 48 && e.keyCode <= 57) || (e.which >= 48 && e.which <= 57)) {
-        // attribute selection shortcut
-        var code = e.keyCode || e.which;
-        keyboardAttributionShortcut(code-48);
+		if (mixinConfig.leftHandedMode === false) {
+			// attribute selection shortcut
+			var code = e.keyCode || e.which;
+			keyboardAttributionShortcut(code-48);
+		}
+		else {
+			// attribute selection shortcut, left handed 9 to 1.
+			var code = e.keyCode || e.which;
+			keyboardAttributionShortcut(-(code-59));
+		}
     }
 }
 function keyboardAttributionShortcut(key) {
     // check whether the dialog is on
     const dialogSelector = $('#param_dialog');
     if (!dialogSelector.dialog('isOpen')) return;
-    if (key === 0) key = 10;
+    if (key === 0 && mixinConfig.leftHandedMode === false ) key = 10;
+	if (key === 11 && mixinConfig.leftHandedMode === true) key = 1;
     try {
         let fs = $('#param_dialog fieldset')[key - 1];
         let checkedObj = $(fs).find('input:checked');
@@ -140,6 +160,7 @@ function patchZoom() {
 function MixinConfiguration() {
     this.keyboardMovementSpeed = 200;
     this.metaUrl = "";
+	this.leftHandedMode = false;
 }
 
 mixinConfig = new MixinConfiguration();
@@ -150,6 +171,7 @@ function makeSettingPannel() {
 
     syncWithLocalStorage(gui.add(mixinConfig, 'keyboardMovementSpeed', 0));
     syncWithLocalStorage(gui.add(mixinConfig, 'metaUrl'));
+	syncWithLocalStorage(gui.add(mixinConfig, 'leftHandedMode'), 'bool');
 }
 
 function loadAnnotationMeta() {
@@ -188,11 +210,15 @@ function loadAnnotationMeta() {
 
 }
 
-function syncWithLocalStorage(controller) {
+function syncWithLocalStorage(controller, type) {
     if (localStorage) {
         var restoredValue = localStorage.getItem(controller.property);
-        if (restoredValue)
-            controller.setValue(restoredValue);
+        if (type === "bool") {
+			controller.setValue(restoredValue === "true" ? true : false);
+		} else  {
+			if (restoredValue)
+				controller.setValue(restoredValue);
+		}
     }
 
     controller.onChange(function (value) {
@@ -389,5 +415,3 @@ function injectionMain() {
 }
 
 injectionMain();
-
-
